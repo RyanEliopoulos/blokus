@@ -1,0 +1,1 @@
+-- looks like the Frame widget can't bind <Motion>. Fortunately root can
