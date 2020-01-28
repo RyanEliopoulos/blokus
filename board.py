@@ -28,20 +28,21 @@ def clickCheck(event):
         On M1 do we drop a currently-selected shape? 
         Certainly if we just clicked on a different chape.
     """
+    if ACTIVE_SHAPE is not None:
+        ACTIVE_SHAPE = None
+        return
 
     ACTIVE_X = event.x
     ACTIVE_Y = event.y
     print("checking mouse click")
-    for shape in shapes:
-        ## Iterate through shapes to detect if they were clicked on
-        if shape.selectionCheck(event.x, event.y):
-            ##
-            ## ACTIVE_SHAP
-            ## shape.update()
-            ##
-            ACTIVE_SHAPE = shape
-            print("OMG WE CLICKED ON A SHAPE!!")
-            break
+    ## Iterate through shapes to detect if they were clicked on
+    if shape.selectionCheck(event.x, event.y):
+        ##
+        ## ACTIVE_SHAP
+        ## shape.update()
+        ##
+        ACTIVE_SHAPE = shape
+        print("OMG WE CLICKED ON A SHAPE!!")
 
 
 def shapeMovement(event):
@@ -65,7 +66,7 @@ class Shape(object):
     def __init__(self, anchor_x, anchor_y, build_order, canvas):
         self.anchor_x = anchor_x
         self.anchor_y = anchor_y
-        self.squares = []               ##  list of pairs: [item id, [anchor coordinate pair]]?
+        self.squares = []               ##  list of item IDs
         self.build_order = build_order  ##  construction blueprints
         self.canvas= canvas
         self._build()
@@ -111,16 +112,13 @@ class Shape(object):
             self.canvas.coords(squares, next_x, next_y, next_x+BOX_WIDTH, next_y+BOX_HEIGHT)
 
 
-
-
-
-
     def selectionCheck(self, clicked_x, clicked_y):
         for square in self.squares:
+            print("Current square is: {}".format(square))
             x, y, x2, y2 = self.canvas.coords(square)
             if clicked_x >= x and clicked_x <= x2 and clicked_y >= y and clicked_y <= y2:
                 return True
-            return False
+        return False
 
 
 
