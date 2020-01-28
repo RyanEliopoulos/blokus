@@ -118,7 +118,7 @@ class Shape(object):
     def selectionCheck(self, clicked_x, clicked_y):
         for square in self.squares:
             x, y, x2, y2 = self.canvas.coords(square)
-            if clicked_x >= x and clicked_x <= x2 and clicked_y >= y and clicked_y >= y2:
+            if clicked_x >= x and clicked_x <= x2 and clicked_y >= y and clicked_y <= y2:
                 return True
             return False
 
