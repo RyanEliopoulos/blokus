@@ -36,13 +36,15 @@ def clickCheck(event):
     ACTIVE_Y = event.y
     print("checking mouse click")
     ## Iterate through shapes to detect if they were clicked on
-    if shape.selectionCheck(event.x, event.y):
-        ##
-        ## ACTIVE_SHAP
-        ## shape.update()
-        ##
-        ACTIVE_SHAPE = shape
-        print("OMG WE CLICKED ON A SHAPE!!")
+    for shape in shapes:
+        if shape.selectionCheck(event.x, event.y):
+            ##
+            ## ACTIVE_SHAP
+            ## shape.update()
+            ##
+            ACTIVE_SHAPE = shape
+            print("OMG WE CLICKED ON A SHAPE!!")
+            break
 
 
 def shapeMovement(event):
@@ -215,7 +217,9 @@ root.bind('<Button-1>', clickCheck)
 shapes = []
 
 shape = Shape(700, 600, ['-', 'D', 'R'], canvas)
+other_shape = Shape(700, 300, ['-', 'U', 'U', 'U'], canvas)
 shapes.append(shape)
+shapes.append(other_shape)
 
 #----
 root.mainloop()
