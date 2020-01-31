@@ -15,9 +15,25 @@ ACTIVE_Y = -1
 
 
 """
-    Called on <M1>.  Pick up shape and glue shape to cursor
+
+    Movement check - If ACTIVE_SHAPE and the cursor moves into the grid, snap shape to grid.
+    on moveEvent, calculate mouse (x, y) distance to top left corner of the currently-occupied grid square, 
+    adjust all squares in the shape by those values.
+    
+    
+    I need to know which square is currently selected in order to do the snap-to adjustment (snapUpdate())
     
 """
+
+
+def snapCheck(event):
+    global ACTIVE_SHAPE
+    global ACTIVE_X
+    global ACTIVE_Y
+
+    ##  first determine if we are in a square - then which square. Then the coordinates to snap
+
+
 
 def clickCheck(event):
     global ACTIVE_SHAPE
@@ -28,6 +44,7 @@ def clickCheck(event):
         On M1 do we drop a currently-selected shape? 
         Certainly if we just clicked on a different chape.
     """
+
     if ACTIVE_SHAPE is not None:
         ACTIVE_SHAPE = None
         return
@@ -48,14 +65,34 @@ def clickCheck(event):
 
 
 def shapeMovement(event):
-    global ACTIVE_SHAPE
+    global BOX_WIDTH
+    global BOX_HEIGHT
+    global COLUMNS
+    global ROWS
     global ACTIVE_X
     global ACTIVE_Y
-    if ACTIVE_SHAPE != None:
-        print("Mouse_X:{}, Mouse_y: {}, ACTIVE_X: {}, ACTIVE_Y: {}".format(event.x, event.y, ACTIVE_X, ACTIVE_Y))
-        ACTIVE_SHAPE.update(event.x, event.y)
-        ACTIVE_X = event.x
-        ACTIVE_Y = event.y
+
+    largest_x = COLUMNS * BOX_WIDTH + 5
+    largest_y = ROWS * BOX_HEIGHT + 5
+
+    print(f"largest x:{largest_x}")
+    print(f"largest y: {largest_y}")
+
+
+    print(f"event.x: {event.x} and event.y:{event.y}")
+    if ACTIVE_SHAPE != None:  ## and mouse not in grid square...
+
+        ## Checking if cursor is within the game board
+        if event.x > 5 and event.x < largest_x and event.y > 5 and event.y < largest_y:
+            print("never making it here?")
+            ACTIVE_SHAPE.snapUpdate(event.x, event.y)
+        else:
+            print("were we are unfortunately expecting us")
+            ACTIVE_SHAPE.update(event.x, event.y)
+
+    print("Mouse_X:{}, Mouse_y: {}, ACTIVE_X: {}, ACTIVE_Y: {}".format(event.x, event.y, ACTIVE_X, ACTIVE_Y))
+    ACTIVE_X = event.x
+    ACTIVE_Y = event.y
 
 
 
@@ -71,6 +108,7 @@ class Shape(object):
         self.squares = []               ##  list of item IDs
         self.build_order = build_order  ##  construction blueprints
         self.canvas= canvas
+        self.selected_square = None
         self._build()
 
     def _build(self):
@@ -113,13 +151,63 @@ class Shape(object):
                 next_y = current_y - y_diff
             self.canvas.coords(squares, next_x, next_y, next_x+BOX_WIDTH, next_y+BOX_HEIGHT)
 
+    def snapUpdate(self, mouse_x, mouse_y):
+        print("in snap update")
+        global ACTIVE_SQUARE
+
+        ## Only called if we know we are in the money. Probably should combine both updates instead.
+        next_x = next_y = None
+
+        ## Determine which square the mouse is occupying
+        column = (mouse_x - 5) // BOX_WIDTH
+        row = (mouse_y - 5) // BOX_HEIGHT
+        #print(f"We think we have column {column} and row {row}")
+
+        print(f"column {column} and row {row} detected")
+        ## item id: column * 10 + row
+        squareID = 10 * column + row + 1
+        #print(f'square id is {squareID}')
+        print(f"square id {squareID}")
+
+        if squareID == ACTIVE_SQUARE:
+            return
+
+
+        ACTIVE_SQUARE = squareID
+
+        ## Calc how far the shape needs to adjust
+        snap_x, snap_y, trash1, trash2 = canvas.coords(ACTIVE_SQUARE)                   # Destination
+        current_x, current_y, trash1, trash2 = self.canvas.coords(self.selected_square) # starting point
+
+        # adjustments required
+        x_diff = current_x - snap_x
+        y_diff = current_y - snap_y
+
+        print(f"x_diff is {x_diff} and y diff is {y_diff}")
+
+        for square in self.squares:
+            current_x, current_y, trash1, trash2 = self.canvas.coords(square)
+
+            if x_diff > 0:  # mouse is moving left
+                next_x = current_x - x_diff
+            else:
+                next_x = current_x - x_diff
+                # y last
+            if y_diff > 0:
+                next_y = current_y - y_diff
+            else:
+                next_y = current_y - y_diff
+            self.canvas.coords(square, next_x, next_y, next_x + BOX_WIDTH, next_y + BOX_HEIGHT)
+
 
     def selectionCheck(self, clicked_x, clicked_y):
         for square in self.squares:
             print("Current square is: {}".format(square))
             x, y, x2, y2 = self.canvas.coords(square)
             if clicked_x >= x and clicked_x <= x2 and clicked_y >= y and clicked_y <= y2:
+                self.selected_square = square
                 return True
+
         return False
 
 
@@ -193,7 +281,7 @@ root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
 #root.bind('<Motion>', updateSquares)
-#root.bind('<Motion>', shapeMovement)
+root.bind('<Motion>', shapeMovement)
 
 # primary frame
 mainframe = ttk.Frame(root)
@@ -203,7 +291,7 @@ mainframe.grid(column=0, row=0, sticky=(N, S, E, W))
 canvas = Canvas(mainframe, height=1000, width=1000)
 canvas.grid(column=0, row=0, sticky=(N, S, E, W))
 
-canvas.bind('<Motion>', shapeMovement)
+#canvas.bind('<Motion>', shapeMovement)
 
 for i in range(COLUMNS):#
     for j in range(ROWS):#
