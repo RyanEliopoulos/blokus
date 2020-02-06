@@ -26,15 +26,6 @@ ACTIVE_Y = -1
 """
 
 
-def snapCheck(event):
-    global ACTIVE_SHAPE
-    global ACTIVE_X
-    global ACTIVE_Y
-
-    ##  first determine if we are in a square - then which square. Then the coordinates to snap
-
-
-
 def clickCheck(event):
     global ACTIVE_SHAPE
     global ACTIVE_X
@@ -71,7 +62,9 @@ def shapeMovement(event):
     global ROWS
     global ACTIVE_X
     global ACTIVE_Y
+    global ACTIVE_SQUARE
 
+    print(f"active square: {ACTIVE_SQUARE}")
     largest_x = COLUMNS * BOX_WIDTH + 5
     largest_y = ROWS * BOX_HEIGHT + 5
 
@@ -80,14 +73,13 @@ def shapeMovement(event):
 
 
     print(f"event.x: {event.x} and event.y:{event.y}")
-    if ACTIVE_SHAPE != None:  ## and mouse not in grid square...
+    if ACTIVE_SHAPE != None:
 
         ## Checking if cursor is within the game board
-        if event.x > 5 and event.x < largest_x and event.y > 5 and event.y < largest_y:
-            print("never making it here?")
+        if event.x > 5 and event.x < largest_x and event.y > 5 and event.y < largest_y:     ## on board
             ACTIVE_SHAPE.snapUpdate(event.x, event.y)
-        else:
-            print("were we are unfortunately expecting us")
+        else:                                                                               ## off board
+            ACTIVE_SQUARE = -1
             ACTIVE_SHAPE.update(event.x, event.y)
 
     print("Mouse_X:{}, Mouse_y: {}, ACTIVE_X: {}, ACTIVE_Y: {}".format(event.x, event.y, ACTIVE_X, ACTIVE_Y))
@@ -198,6 +190,7 @@ class Shape(object):
             else:
                 next_y = current_y - y_diff
             self.canvas.coords(square, next_x, next_y, next_x + BOX_WIDTH, next_y + BOX_HEIGHT)
+            print(next_x, next_y)
 
 
     def selectionCheck(self, clicked_x, clicked_y):
