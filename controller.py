@@ -7,11 +7,13 @@ class Controller(object):
         self.boardModel = model
         self.boardView = view
 
-        ## Establish listener to update controller with mouse movements
-        ## init
+        ##### init board
+        ## Set listeners
         self.boardView.setMovementListener(self.mouseListener)
-        # Additional things here, like View.initGrid/initScreen?
+        self.boardView.setClickListener(self.clickListener)
 
+        self.boardModel.initShapes()
+        self.boardView.initScreen(self.boardModel.initScreen())
 
         ############################################
         ## Begin
@@ -20,5 +22,6 @@ class Controller(object):
     def mouseListener(self, event):
         self.boardModel.updateCoords(event.x, event.y)
 
-
+    def clickListener(self, event):
+        self.boardModel.clickEvent(event)
 
