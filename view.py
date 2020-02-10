@@ -53,11 +53,25 @@ class View(object):
         """
         print("heyo we here?")
         for opts in squares:
-            self.canvas.create_rectangle(opts[0], opts[1], opts[2], opts[3], fill=opts[4])
+            new_item = self.canvas.create_rectangle(opts[0], opts[1], opts[2], opts[3], fill=opts[4])
+            print(new_item)
 
     ## Update the square positions on screen
     def updateScreen(self, squares):
-        pass
+        if squares is None:
+            return
+        for square in squares:
+            x = square[0]
+            y = square[1]
+            x2 = square[2]
+            y2 = square[3]
+            fill = square[4]
+            item_number = square[5]
+
+            print(f'this is a square {square}')
+            self.canvas.itemconfigure(item_number, fill=fill)
+            self.canvas.coords(item_number, x, y, x2, y2)
+
 
     ## Begin main program loop
     def beginLoop(self):
