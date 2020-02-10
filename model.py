@@ -22,6 +22,7 @@ class Board(object):
         self.mouse_x        = -1
         self.mouse_y        = -1
         self.square_count   = 0
+        self.snap_square    = None      ## grid square occupied by the cursor
 
     ## Starting pieces
     def initShapes(self):
@@ -91,27 +92,37 @@ class Board(object):
             self.mouse_y = new_y
             return
 
-        ## needs to provide [Int, {update_rectangle: options,}]
-        ## to the canvas.itemconfigure()
-
+        ## updating mouse position and GTFOing
         if self.active_shape is None:
             self.mouse_x = new_x
             self.mouse_y = new_y
-            return                          ## nothing to really consider, then.
+            return
 
-        ######
-        #####
-        ##### NEED TO CHECK IF SNAP TO GRID OR SMOOTH MOVEMENT!!
+        ####### There is an active shape. Deterine snap or smooth movement
+        on_grid = False
+        x_diff  = 0
+        y_diff  = 0
 
+        ### Implementing Snap to Grid
+        ## checking if one the grid.
+        for square in self.grid_squares:
+            if new_x < square.x2 and new_x > square.x and new_y < square.y2 and new_y > square.y:
+                ## In this square. Let's update coords
+                if square is not self.snap_square:
+                    self.snap_square = square
+                    x_diff = square.x - self.active_shape.active_square.x
+                    y_diff = square.y - self.active_shape.active_square.y
+                on_grid = True
+                break
 
+        if on_grid:
+            self.active_shape.updateCoords(x_diff, y_diff)
+        else: ## Smooth movement...
+            x_diff = new_x - self.mouse_x
+            y_diff = new_y - self.mouse_y
 
-        ## Assuming smooth movement...
-
-        x_diff = new_x - self.mouse_x
-        y_diff = new_y - self.mouse_y
-
-        print(f"x diff: {x_diff}, y diff: {y_diff}")
-        self.active_shape.updateCoords(x_diff, y_diff)
+            print(f"x diff: {x_diff}, y diff: {y_diff}")
+            self.active_shape.updateCoords(x_diff, y_diff)
 
 
         self.mouse_x = new_x
@@ -156,6 +167,9 @@ class Board(object):
                     return
 
         else:
+            ##### THIS NEEDS FURTHER WORK
+            ##### Click may be placement on the grid. Then need to check validity of such move.
+            self.active_shape.active_square = None
             self.active_shape = None
         ## Clicked while a shape was active
 
@@ -172,6 +186,7 @@ class Board(object):
             self.fill           = fill         ## create_rectangle(fill=)
             self.occupied       = False
 
+
     class Shape(object):
 
         def __init__(self, anchor_x, anchor_y, build_order, shape_color, side_length, square_count):
@@ -187,6 +202,7 @@ class Board(object):
             self.build_order    = build_order   ## for respawning at default loc
             self.color          = shape_color
             self.side_length    = side_length
+            self.active_square  = None          ## clicked by cursor
             self.squares        = []            ## coordinates of the current positions
             self.placed         = False         ## Has this piece been placed on the board yet?
 
@@ -232,6 +248,7 @@ class Board(object):
                 ## Check x axis
                 if click_x > square.x and click_x < square.x2:
                     if click_y > square.y and click_y < square.y2:
+                        self.active_square = square
                         return True
             return False
 
