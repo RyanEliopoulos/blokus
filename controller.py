@@ -12,7 +12,6 @@ class Controller(object):
         self.boardView.setMovementListener(self.mouseListener)
         self.boardView.setClickListener(self.clickListener)
 
-        self.boardModel.initShapes()
         self.boardView.initScreen(self.boardModel.initScreen())
 
         ############################################
@@ -20,8 +19,12 @@ class Controller(object):
         self.boardView.beginLoop()
 
     def mouseListener(self, event):
-        self.boardModel.updateCoords(event.x, event.y)
+        view = self.boardView
+        model = self.boardModel
+        view.updateScreen(model.updateCoords(event.x, event.y))
 
     def clickListener(self, event):
-        self.boardModel.clickEvent(event)
+        view = self.boardView
+        model = self.boardModel
+        view.updateScreen(model.clickEvent(event))
 
