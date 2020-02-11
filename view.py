@@ -61,6 +61,7 @@ class View(object):
         if squares is None:
             return
         for square in squares:
+            ## This keeps growing longer...I guess this is why dicts are better??
             x = square[0]
             y = square[1]
             x2 = square[2]
@@ -71,6 +72,8 @@ class View(object):
             print(f'this is a square {square}')
             self.canvas.itemconfigure(item_number, fill=fill)
             self.canvas.coords(item_number, x, y, x2, y2)
+            if fill == 'pink':      ## Need obstructed squares to show at the highest level
+                self.canvas.tag_raise(item_number)
 
 
     ## Begin main program loop
