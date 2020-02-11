@@ -1,8 +1,11 @@
 
 """
+    Currently building out the validMove method to flesh out placing pieces on the board.
+    This first requires the model have a concept of a piece being 'played'.
 
 
 """
+
 
 class Board(object):
 
@@ -117,7 +120,34 @@ class Board(object):
 
         if on_grid:
             self.active_shape.updateCoords(x_diff, y_diff)
+
+            ### evaluate overlapping/off grid squares.
+
+            # checking if any active_shape square is off the grid
+            searchspace = [[sq.x, sq.y] for sq in self.grid_squares]
+            for shape_square in self.active_shape.squares:
+                coord = [shape_square.x, shape_square.y]
+
+                if coord not in searchspace:
+                    shape_square.fill='pink'
+                else:
+                    shape_square.fill = self.active_shape.color
+
+            # Checking shape_squares against grid_squares occupied status
+            searchspace = [[sq.x, sq.y] for sq in self.grid_squares if sq.occupied]
+            for square in self.active_shape.squares:
+                coord = [square.x, square.y]
+                if coord in searchspace:
+                    square.fill='pink'
+
+
+
         else: ## Smooth movement...
+            if self.snap_square:            ## Transitioning from grid to smooth
+                self.snap_square = None     ### clearing potential last grid square
+                for square in self.active_shape.squares:
+                    square.fill = self.active_shape.color       ## update squares in off-grid camo
+
             x_diff = new_x - self.mouse_x
             y_diff = new_y - self.mouse_y
 
@@ -131,33 +161,26 @@ class Board(object):
 
         ### This should be calling a Board method that does all the validity checking and intejecting
         ### the occupoied space/out of bounds color
+
+        ####
+        ####  return = self.clippedCoords()
+        ####
         for shape in self.shapes:
             shape_coords = shape.getCoords()
             for s_coord in shape_coords:
                 coords.append(s_coord)
 
+
+
         print("coords")
         print(coords)
         return coords
-        ##### If we have an active shape, the shape needs to update it's position - so
-        ##### either smooth movement or check grid placement.
-
-        ### We have an active shape. So, we have to determine how it moves/updates
-        """
-            Have to update all grid_squares and Shapes.
-            Then pass new dimension list
-        """
-
-
-
-        ## return dimensions
 
     ## Processing mouse click
     def clickEvent(self, event):
         print(f"in click event with coords: {event.x}, {event.y}")
-        ## evaluate implications of a mouse click here
-        ## don't need to update view when this happens, right?
 
+        ## Potentially picking a piece
         if self.active_shape is None:
             ## check if click is within a shape.
             for shape in self.shapes:
@@ -166,14 +189,48 @@ class Board(object):
                     self.active_shape = shape
                     return
 
+        ## Or dropping a piece
         else:
-            ##### THIS NEEDS FURTHER WORK
-            ##### Click may be placement on the grid. Then need to check validity of such move.
-            self.active_shape.active_square = None
-            self.active_shape = None
-        ## Clicked while a shape was active
 
-        # 1) Check if click in grid.  Snap
+            if self.snap_square:  ## indicates we are currently on grid
+                ## Checking if move is valid
+                if self.moveCheck():    # successful move
+                    self.active_shape.placed = True
+                    self.active_shape.active_square = None
+                    self.active_shape = None
+                    ####
+                #### CHANGE PLAYER TURN
+            else:  # clicked off grid -- respawn or drop piece where it is?
+                self.active_shape.active_square = None
+                self.active_shape               = None
+
+
+    def moveCheck(self):
+
+        ## First check if anything is off grid
+        for shape_square in self.active_shape.squares:
+            coord = [shape_square.x, shape_square.y]
+            searchspace = [[sq.x, sq.y] for sq in self.grid_squares]
+            if coord not in searchspace:
+                print("invalid move - there are pieces hanging off the grid`")
+                return False
+
+        ## Now check for obstructions on the game board. (in the ugliest way possible)
+        considered_squares = []             ## grid_squares that might be occupied by this move
+        for square in self.grid_squares:
+            for shape_square in self.active_shape.squares:
+                if shape_square.x == square.x and shape_square.y == square.y:
+                    if square.occupied:
+                        print("invalid move - There are pieces in the way.")
+                        return False
+                    considered_squares.append(square)
+
+        print("valid move.")
+        ## Updated grid_squares
+        for square in considered_squares:
+            square.occupied = True
+
+        return True
 
     class Square(object):
 
@@ -182,9 +239,10 @@ class Board(object):
             self.y              = y
             self.x2             = x2
             self.y2             = y2
-            self.item_number    = item_number  ## len(Board.grid_squares) + 1
-            self.fill           = fill         ## create_rectangle(fill=)
-            self.occupied       = False
+            self.item_number    = item_number   ## len(Board.grid_squares) + 1
+            self.fill           = fill          ## create_rectangle(fill=)
+            self.occupied       = False         ## used only by the grid squares
+            self.off_grid       = False         ## used only by the pieces
 
 
     class Shape(object):
