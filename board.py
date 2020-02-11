@@ -12,8 +12,6 @@ ACTIVE_X = -1           ## Calculate relative mouse movement. Then translate tha
 ACTIVE_Y = -1
 
 
-
-
 """
 
     Movement check - If ACTIVE_SHAPE and the cursor moves into the grid, snap shape to grid.
@@ -85,7 +83,6 @@ def shapeMovement(event):
     print("Mouse_X:{}, Mouse_y: {}, ACTIVE_X: {}, ACTIVE_Y: {}".format(event.x, event.y, ACTIVE_X, ACTIVE_Y))
     ACTIVE_X = event.x
     ACTIVE_Y = event.y
-
 
 
 class Shape(object):
@@ -214,11 +211,6 @@ class Shape(object):
             return current_x-BOX_WIDTH, current_y
         if next_direction == 'R':
             return current_x+BOX_WIDTH, current_y
-
-
-
-
-
 
 """
 
