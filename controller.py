@@ -11,6 +11,7 @@ class Controller(object):
         ## Set listeners
         self.boardView.setMovementListener(self.mouseListener)
         self.boardView.setClickListener(self.clickListener)
+        self.boardView.setKeyListener(self.keyListener)
 
         self.boardView.initScreen(self.boardModel.initScreen())
 
@@ -27,4 +28,11 @@ class Controller(object):
         view = self.boardView
         model = self.boardModel
         view.updateScreen(model.clickEvent(event))
+
+    def keyListener(self, event):
+        view = self.boardView
+        model = self.boardModel
+        view.updateScreen(model.rotationEvent(event))
+        print("key listener activated")
+        print(event.keysym)
 
