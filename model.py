@@ -1,9 +1,7 @@
 
 """
 
-    Working the Shape method rotate.
-
-    Don't quite have an algorithm for that.
+    x-axis mirror and right rotation now work.  Need to add their counterparts
 
 """
 
@@ -354,7 +352,7 @@ class Board(object):
 
             print("shape is rotating...")
             if direction == 'Up':
-                ## mirror
+                ## mirror x axis
 
                 for square in self.squares:
                     if square.x < self.active_square.x:
@@ -368,21 +366,32 @@ class Board(object):
             ### Right incomplete
             elif direction == 'Right':
                 for square in self.squares:
-                    ## translate vertical differences to horizontal differences
-                    horizontal_moves = (self.active_square.y - square.y) / self.side_length
-                    print(horizontal_moves)
-                    print(f'old x was {square.x}')
-                    #square.x += horizontal_moves * self.side_length
-                    new_x = self.active_square.x + (horizontal_moves * self.side_length)
-                    print(f'new x is {square.x}')
 
+
+                    ## translate vertical differences to horizontal differences
+                    horizontal_moves = abs((self.active_square.y - square.y) / self.side_length)
+                    print(horizontal_moves)
+
+                    print(f'old x is {square.x}')
+                    if square.y > self.active_square.y:
+                        new_x = self.active_square.x - (horizontal_moves * self.side_length)
+                    else:
+                        new_x = self.active_square.x + (horizontal_moves * self.side_length)
+
+
+                    vertical_moves = abs((self.active_square.x - square.x) / self.side_length)
+                    print(f'new x is {new_x}')
+
+                    if square.x > self.active_square.x:
+                        new_y = self.active_square.y + (vertical_moves * self.side_length)
+                    else:
+                        new_y = self.active_square.y - (vertical_moves * self.side_length)
                     ## translate horizontal differences to vertical differences
-                    vertical_moves = (self.active_square.x - square.x) / self.side_length
                     print(vertical_moves)
                     print(f'old y was {square.y}')
                     #square.y += vertical_moves * self.side_length
-                    new_y = self.active_square.y + (vertical_moves * self.side_length)
-                    print(f'new y is {square.y}')
+                    #new_y = self.active_square.y + (vertical_moves * self.side_length)
+                    print(f'new y is {new_y}')
 
                     square.x = new_x
                     square.x2 = new_x + self.side_length
