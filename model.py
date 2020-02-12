@@ -1,8 +1,9 @@
 
 """
-    Currently building out the validMove method to flesh out placing pieces on the board.
-    This first requires the model have a concept of a piece being 'played'.
 
+    Working the Shape method rotate.
+
+    Don't quite have an algorithm for that.
 
 """
 
@@ -172,20 +173,20 @@ class Board(object):
 
 
 
-        print("coords")
-        print(coords)
+        #print("coords")
+        #print(coords)
         return coords
 
     ## Processing mouse click
     def clickEvent(self, event):
-        print(f"in click event with coords: {event.x}, {event.y}")
+        #print(f"in click event with coords: {event.x}, {event.y}")
 
         ## Potentially picking a piece
         if self.active_shape is None:
             ## check if click is within a shape.
             for shape in self.shapes:
                 if shape.clicked(event.x, event.y) and not shape.placed:
-                    print(f"new active shape: {shape}")
+                    #print(f"new active shape: {shape}")
                     self.active_shape = shape
                     return
 
@@ -231,6 +232,21 @@ class Board(object):
             square.occupied = True
 
         return True
+
+    # Rotate active piece in the event.keysym direction 90*.
+    def rotationEvent(self, event):
+        print("yo wtf")
+        if not self.active_shape:
+            return
+
+        print("about to event active shape rotate method")
+        self.active_shape.rotate(event.keysym)
+        print("exited active shape rotate method")
+        ## maybe not the cleanest solution, but this will work
+        return self.updateCoords(self.mouse_x, self.mouse_y)
+
+
+
 
     class Square(object):
 
@@ -295,11 +311,12 @@ class Board(object):
             coords = []
             for square in self.squares:
                 coords.append([square.x, square.y, square.x2, square.y2, square.fill, square.item_number])
-            print("yaba daba doo")
+            #print("yaba daba doo")
             print(coords)
             return coords
 
         ## checks if current shape has just been selected
+        ## aka did the click just land inside here?
         def clicked(self, click_x, click_y):
 
             for square in self.squares:
@@ -319,7 +336,56 @@ class Board(object):
                 square.y += y_diff
                 square.y2 += y_diff
 
+        ## Rotates shape 90* in the specified direction
+        def rotate(self, direction):
+            """
+
+            :param direction:  String - 'left' or 'right' 90 degrees
+            :return:
+            """
+
+            """
+            1) make the active square the point of rotation.  
+            2) Calculate the vertical and horizontal square distance from each square to the point of rotation. 
+            3) translate 'right': down = right, right = up, up = left, left = down
+                          'left': down = left, right = down, up = right, left = up
+            
+            """
+
+            print("shape is rotating...")
+            if direction == 'Up':
+                ## mirror
+
+                for square in self.squares:
+                    if square.x < self.active_square.x:
+                        square.x = self.active_square.x + (self.active_square.x - square.x)
+                        square.x2 = square.x + self.side_length
+                    else:
+                        square.x = self.active_square.x - (square.x - self.active_square.x)
+                        square.x2 = square.x + self.side_length
 
 
+            ### Right incomplete
+            elif direction == 'Right':
+                for square in self.squares:
+                    ## translate vertical differences to horizontal differences
+                    horizontal_moves = (self.active_square.y - square.y) / self.side_length
+                    print(horizontal_moves)
+                    print(f'old x was {square.x}')
+                    #square.x += horizontal_moves * self.side_length
+                    new_x = self.active_square.x + (horizontal_moves * self.side_length)
+                    print(f'new x is {square.x}')
 
+                    ## translate horizontal differences to vertical differences
+                    vertical_moves = (self.active_square.x - square.x) / self.side_length
+                    print(vertical_moves)
+                    print(f'old y was {square.y}')
+                    #square.y += vertical_moves * self.side_length
+                    new_y = self.active_square.y + (vertical_moves * self.side_length)
+                    print(f'new y is {square.y}')
 
+                    square.x = new_x
+                    square.x2 = new_x + self.side_length
+
+                    square.y = new_y
+                    square.y2 = new_y + self.side_length
