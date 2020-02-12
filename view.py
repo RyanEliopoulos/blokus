@@ -44,6 +44,11 @@ class View(object):
     def setClickListener(self, listener):
         self.root.bind('<Button-1>', listener)
 
+    ## listen for
+    def setKeyListener(self, listener):
+        self.root.bind('<Right>', listener)
+        self.root.bind('<Up>', listener)
+
     ## Initial screen state.
     def initScreen(self, squares):
         """
