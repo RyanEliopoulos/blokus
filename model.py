@@ -1,7 +1,10 @@
 
 """
 
-    x-axis mirror and right rotation now work.  Need to add their counterparts
+    1)x-axis mirror and right rotation now work.  Need to add their counterparts
+
+    2)  Need to handle player count and initial spawn locations.  Then beef up valid move logic to restrict
+        moves to spawn corner or those adjacent to pieces already played.
 
 """
 
@@ -85,7 +88,9 @@ class Board(object):
         print(dimensions)
         return dimensions
 
-    ## Processing mouse movement
+    ## Processing mouse movement.  Probably the most complex method.
+    ## Responsible for snap-to-grid / smooth movement detection
+    ## Responsible for 'drawing' the board state
     def updateCoords(self, new_x, new_y):
 
         ## initial movement on the board.  Prior position is undefined
@@ -105,8 +110,7 @@ class Board(object):
         x_diff  = 0
         y_diff  = 0
 
-        ### Implementing Snap to Grid
-        ## checking if one the grid.
+        ### checking if on the grid.
         for square in self.grid_squares:
             if new_x < square.x2 and new_x > square.x and new_y < square.y2 and new_y > square.y:
                 ## In this square. Let's update coords
@@ -122,11 +126,12 @@ class Board(object):
 
             ### evaluate overlapping/off grid squares.
 
-            # checking if any active_shape square is off the grid
+            ## checking if any active_shape square is off the grid
             searchspace = [[sq.x, sq.y] for sq in self.grid_squares]
             for shape_square in self.active_shape.squares:
                 coord = [shape_square.x, shape_square.y]
 
+                ## use fill indicator to display error to player
                 if coord not in searchspace:
                     shape_square.fill='pink'
                 else:
@@ -136,9 +141,10 @@ class Board(object):
             searchspace = [[sq.x, sq.y] for sq in self.grid_squares if sq.occupied]
             for square in self.active_shape.squares:
                 coord = [square.x, square.y]
+
+                ## use fill indicator to display error to player
                 if coord in searchspace:
                     square.fill='pink'
-
 
 
         else: ## Smooth movement...
@@ -170,14 +176,12 @@ class Board(object):
                 coords.append(s_coord)
 
 
-
         #print("coords")
         #print(coords)
         return coords
 
     ## Processing mouse click
     def clickEvent(self, event):
-        #print(f"in click event with coords: {event.x}, {event.y}")
 
         ## Potentially picking a piece
         if self.active_shape is None:
@@ -190,7 +194,6 @@ class Board(object):
 
         ## Or dropping a piece
         else:
-
             if self.snap_square:  ## indicates we are currently on grid
                 ## Checking if move is valid
                 if self.moveCheck():    # successful move
@@ -204,7 +207,13 @@ class Board(object):
                 self.active_shape               = None
 
 
+    ### Called when a click event happens with an active shape
+    ### Checks if the click is placing a valid move
     def moveCheck(self):
+        """
+
+        :return: True if valid move is made, otherwise False
+        """
 
         ## First check if anything is off grid
         for shape_square in self.active_shape.squares:
@@ -224,6 +233,15 @@ class Board(object):
                         return False
                     considered_squares.append(square)
 
+
+        """
+        
+            ######
+            ######  Need to ensure piece is corner-to-corner with another piece of the same color
+            ######  AND no surface-to-surface contact is occuring between same-colored pieces. 
+            ###### 
+        
+        """
         print("valid move.")
         ## Updated grid_squares
         for square in considered_squares:
@@ -231,16 +249,15 @@ class Board(object):
 
         return True
 
-    # Rotate active piece in the event.keysym direction 90*.
+    ## rotation or mirroring of the active shape
     def rotationEvent(self, event):
-        print("yo wtf")
         if not self.active_shape:
             return
 
         print("about to event active shape rotate method")
         self.active_shape.rotate(event.keysym)
         print("exited active shape rotate method")
-        ## maybe not the cleanest solution, but this will work
+        ## requres coordinates, but is only being used to redraw
         return self.updateCoords(self.mouse_x, self.mouse_y)
 
 
@@ -335,6 +352,7 @@ class Board(object):
                 square.y2 += y_diff
 
         ## Rotates shape 90* in the specified direction
+        ## rotation is about the active_square
         def rotate(self, direction):
             """
 
@@ -362,37 +380,25 @@ class Board(object):
                         square.x = self.active_square.x - (square.x - self.active_square.x)
                         square.x2 = square.x + self.side_length
 
-
-            ### Right incomplete
+            ### Right 90* about the active_square
             elif direction == 'Right':
                 for square in self.squares:
 
-
                     ## translate vertical differences to horizontal differences
                     horizontal_moves = abs((self.active_square.y - square.y) / self.side_length)
-                    print(horizontal_moves)
-
-                    print(f'old x is {square.x}')
                     if square.y > self.active_square.y:
                         new_x = self.active_square.x - (horizontal_moves * self.side_length)
                     else:
                         new_x = self.active_square.x + (horizontal_moves * self.side_length)
 
-
+                    ## translate horizontal differences to vertical differences
                     vertical_moves = abs((self.active_square.x - square.x) / self.side_length)
-                    print(f'new x is {new_x}')
-
                     if square.x > self.active_square.x:
                         new_y = self.active_square.y + (vertical_moves * self.side_length)
                     else:
                         new_y = self.active_square.y - (vertical_moves * self.side_length)
-                    ## translate horizontal differences to vertical differences
-                    print(vertical_moves)
-                    print(f'old y was {square.y}')
-                    #square.y += vertical_moves * self.side_length
-                    #new_y = self.active_square.y + (vertical_moves * self.side_length)
-                    print(f'new y is {new_y}')
 
+                    ## updating square to new reality
                     square.x = new_x
                     square.x2 = new_x + self.side_length
 
