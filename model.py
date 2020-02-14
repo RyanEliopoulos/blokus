@@ -6,6 +6,10 @@
     2)  Need to handle player count and initial spawn locations.  Then beef up valid move logic to restrict
         moves to spawn corner or those adjacent to pieces already played.
 
+    3)  Need to start implementing the idea of players and turns.
+
+    4) Update view to take a dictionary of square data rather than the list of list.
+
 """
 
 
@@ -17,6 +21,10 @@ class Board(object):
         self.columns        = 10
         self.rows           = 10
         self.padding        = 5         ## space between window edge and grid edge
+
+        ## player-related settings
+        self.player_count   = None      ## updated by controller
+        self.player_slots   = ['red', 'blue', 'green', 'yellow']
 
         ## graphics
         self.grid_squares   = []        ## Square objects representing the grid
@@ -44,6 +52,14 @@ class Board(object):
         self.shapes.append(new_shape)
         self.shapes.append(other_shape)
 
+        new_shape = self.Shape(500, 600, ['X', 'D', 'R'], 'blue', self.side_length, self.square_count)
+        self.square_count += len(new_shape.squares)
+        other_shape = self.Shape(500, 300, ['X', 'U', 'U', 'U'], 'blue', self.side_length, self.square_count)
+        self.square_count += len(other_shape.squares)
+
+        self.shapes.append(new_shape)
+        self.shapes.append(other_shape)
+
     ## Build out initial screen state
     def initScreen(self):
 
@@ -58,10 +74,9 @@ class Board(object):
         """
         dimensions = []
 
-
         ## First take care of grid
-        for i in range(self.columns):  #
-            for j in range(self.rows):  #
+        for i in range(self.columns):
+            for j in range(self.rows):
                 ### Top left corning position (x, y, <>, <>) and bottom right corning (<>, <>, x, y)#
                 sl = self.side_length
                 padding = self.padding
@@ -84,8 +99,6 @@ class Board(object):
             dimensions += shape.getCoords()
 
         ## and send them to the view for drawing
-        print("dimensions")
-        print(dimensions)
         return dimensions
 
     ## Processing mouse movement.  Probably the most complex method.
@@ -121,6 +134,7 @@ class Board(object):
                 on_grid = True
                 break
 
+        ########  Shape is snapped to grid.
         if on_grid:
             self.active_shape.updateCoords(x_diff, y_diff)
 
@@ -133,7 +147,12 @@ class Board(object):
 
                 ## use fill indicator to display error to player
                 if coord not in searchspace:
-                    shape_square.fill='pink'
+
+                    ## update with appropriate error colors
+                    if shape_square.fill == 'red':
+                        shape_square.fill = 'pink'
+                    elif shape_square.fill == 'blue':
+                        shape_square.fill = 'light blue'
                 else:
                     shape_square.fill = self.active_shape.color
 
@@ -144,12 +163,15 @@ class Board(object):
 
                 ## use fill indicator to display error to player
                 if coord in searchspace:
-                    square.fill='pink'
+                    if self.active_shape.color == 'red':
+                        square.fill = 'pink'
+                    elif self.active_shape.color == 'blue':
+                        square.fill = 'light blue'
 
-
-        else: ## Smooth movement...
+        ## Smooth movement - shape is not snapped to grid
+        else:
             if self.snap_square:            ## Transitioning from grid to smooth
-                self.snap_square = None     ### clearing potential last grid square
+                self.snap_square = None     ## clearing potential last grid square
                 for square in self.active_shape.squares:
                     square.fill = self.active_shape.color       ## update squares in off-grid camo
 
@@ -159,25 +181,19 @@ class Board(object):
             print(f"x diff: {x_diff}, y diff: {y_diff}")
             self.active_shape.updateCoords(x_diff, y_diff)
 
-
+        ## updating game board mouse position
         self.mouse_x = new_x
         self.mouse_y = new_y
         coords = []
-
-        ### This should be calling a Board method that does all the validity checking and intejecting
-        ### the occupoied space/out of bounds color
-
-        ####
-        ####  return = self.clippedCoords()
-        ####
+        ## building coords
         for shape in self.shapes:
             shape_coords = shape.getCoords()
+            ## Need to make sure view draws the active shape above everything else
             for s_coord in shape_coords:
+                bring_fore = True if shape is self.active_shape else False
+                s_coord.append(bring_fore)
                 coords.append(s_coord)
 
-
-        #print("coords")
-        #print(coords)
         return coords
 
     ## Processing mouse click
@@ -242,6 +258,9 @@ class Board(object):
             ###### 
         
         """
+
+
+
         print("valid move.")
         ## Updated grid_squares
         for square in considered_squares:
@@ -274,6 +293,7 @@ class Board(object):
             self.fill           = fill          ## create_rectangle(fill=)
             self.occupied       = False         ## used only by the grid squares
             self.off_grid       = False         ## used only by the pieces
+            self.to_fore        = False         ## flag for view to raise to uppermost position
 
 
     class Shape(object):
@@ -326,8 +346,6 @@ class Board(object):
             coords = []
             for square in self.squares:
                 coords.append([square.x, square.y, square.x2, square.y2, square.fill, square.item_number])
-            #print("yaba daba doo")
-            print(coords)
             return coords
 
         ## checks if current shape has just been selected
