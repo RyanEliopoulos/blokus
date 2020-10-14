@@ -1,1 +1,16 @@
+10/14/2020
+	++ Seems like the current architecture makes it impossible for the view to contain a button whose activation should alert the model.
+	    Currently no clean way for the model to communicate to the view whose turn it is.  We need a more robust means of communication.
+
+	== Current architecture of the program might be going ham on stack frames, getting higher every time a function in a different MVC component is called.
+
+10/13/2020
+
+	++Been some time since I've worked on this. Code quality and organization aside, It looks like implementing the concept of player turn should come first, followed
+	followed by a process to evaluate the validity of a move.
+		
+		: Turn switch now active for hard coded blue and red players. 
+
+	== Added logic for checking move validity today. 
+
 -- looks like the Frame widget can't bind <Motion>. Fortunately root can
