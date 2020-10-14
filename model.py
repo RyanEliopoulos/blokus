@@ -3,9 +3,6 @@
 
     1)x-axis mirror and right rotation now work.  Need to add their counterparts
 
-    2)  Need to handle player count and initial spawn locations.  Then beef up valid move logic to restrict
-        moves to spawn corner or those adjacent to pieces already played.
-
     3) Update view to take a dictionary of square data rather than the list of list.
 
 
@@ -22,29 +19,31 @@
 class Board(object):
 
     def __init__(self):
-        ## Board layout
-        self.side_length    = 50
-        self.columns        = 10
-        self.rows           = 10
-        self.padding        = 5         ## space between window edge and grid edge
+        # Board layout
+        self.side_length       = 50
+        self.columns           = 10
+        self.rows              = 10
+        self.padding           = 5         ## space between window edge and grid edge
+        self.corner_coordinates = []
 
-        ## player-related settings
+        # player-related settings
         self.player_count   = 2      ## updated by controller
         self.player_slots   = ['red', 'blue']
         self.current_player = 'red'
 
-        ## graphics
+        # graphics
         self.grid_squares   = []        ## Square objects representing the grid
         self.shapes         = []        ## shape objects
         self.active_shape   = None      ## shape/game piece currently selected and moving
 
-        ## Logic variables
+        # Logic variables
         self.mouse_x        = -1
         self.mouse_y        = -1
         self.square_count   = 0
         self.snap_square    = None      ## grid square occupied by the cursor
 
-    ## Starting pieces
+
+    # Starting pieces
     def initShapes(self):
         """
                 Builds out the Shapes (playing pieces) on the board
@@ -245,7 +244,7 @@ class Board(object):
         :return: True if valid move is made, otherwise False
         """
 
-        ## First check if anything is off grid
+        # First check if anything is off grid
         for shape_square in self.active_shape.squares:
             coord = [shape_square.x, shape_square.y]
             searchspace = [[sq.x, sq.y] for sq in self.grid_squares]
@@ -253,8 +252,8 @@ class Board(object):
                 print("invalid move - there are pieces hanging off the grid`")
                 return False
 
-        ## Now check for obstructions on the game board. (in the ugliest way possible)
-        considered_squares = []             ## grid_squares that might be occupied by this move
+        # Now check for obstructions on the game board. (in the ugliest way possible)
+        considered_squares = []             # grid_squares that might be occupied by this move
         for square in self.grid_squares:
             for shape_square in self.active_shape.squares:
                 if shape_square.x == square.x and shape_square.y == square.y:
@@ -263,52 +262,91 @@ class Board(object):
                         return False
                     considered_squares.append(square)
 
-
-        """
-        
-            ######
-            ######  Need to ensure piece is corner-to-corner with another piece of the same color
-            ######  AND no surface-to-surface contact is occuring between same-colored pieces. 
-            ###### 
-       
-       
-            Idea; Iterate through all shapes. Only check for validity against
-                a) shapes that have been placed
-                b) shapes of the same color. 
-            with those restrictions already in place, it should be evaluating each square in a placed_shape
-            against each square in the active_shape.  There are 4 potential surfaces to check for contact.
-            That would be: (active_square == placed_square)
-                1 (top of square):  (x1,y1) == (x2,y1) && (x2, y1) == (x2, y2)
-                2 (right of square): (x2, y1) == (x1,y1) && (x2, y2) == (x1,y2)
-                3 (bottom): (x1,y2) == (x1,y1) && (x2,y2) == (x2,y1)
-                4 (left): (x1,y1) == (x2,y1) && (x1,y2) == (x2, y2)
-                
-            That would return False.
-            
-            
-           Another round of checks is required to see if an active_square is touching corners with a played square. 
-           That will require another layer of iteration through every corner combination between the two squares.
-         
-           
-        """
-
-        # Checking for surface contact with friendly shape
+        # Checking for surface contact with friendly shapes
         for shape in self.shapes:                       # Boards list of player shapes
             if shape.placed and shape.color == self.current_player:
                 if shape.check_face_contact(self.active_shape):
                     return False
 
+        # Checking for corner contact with friendly shapes
+        for shape in self.shapes:
+            if shape.placed and shape.color == self.current_player:
+                if shape.check_corner_contact(self.active_shape):
+                    # Updating the grid squares that are now occupied
+                    for square in considered_squares:
+                        square.occupied = True
+                    print("valid move.")
+                    return True
+
+        # Checking for corner contact with the initial spawning positions
+        if self.spawn_placement_check():
+            return True
+
+        print('Invalid move - No corner contact between friendly shapes')
+        return False
+
+    def spawn_placement_check(self):
+        """
+            Potential shape placement needs to check if the move is in a spawn point.
+
+        :return: True if active_shape is touching one of the outside corners
+        """
+
+        # Calculating coordinates if haven't already done so
+        if len(self.corner_coordinates) == 0:
+            # top-left coordinates
+            tl_x = 9999999
+            tl_y = 9999999
+            # top-right coordinates
+            tr_x = -1
+            tr_y = 9999999
+            # bottom-right coordinates
+            br_x = -1
+            br_y = -1
+            # bottom-left coordinates
+            bl_x = 999999
+            bl_y = -1
+
+            for square in self.grid_squares:
+                # Checking for top left
+                if square.x <= tl_x and square.y <= tl_y:
+                    tl_x = square.x
+                    tl_y = square.y
+                # Checking top right
+                if square.x >= tr_x and square.y <= tr_y:
+                    tr_x = square.x2
+                    tr_y = square.y
+                # Checking bottom right
+                if square.x >= br_x and square.y >= br_y:
+                    br_x = square.x2
+                    br_y = square.y2
+                # Checking bottom left
+                if square.x <= bl_x and square.y >= bl_y:
+                    bl_x = square.x
+                    bl_y = square.y2
+
+            # All board squares evaluated.
+            # Updating board with coordinates
+            self.corner_coordinates.append((tl_x, tl_y))
+            self.corner_coordinates.append((tr_x, tr_y))
+            self.corner_coordinates.append((br_x, br_y))
+            self.corner_coordinates.append((bl_x, bl_y))
+
+        # Checking corners
+        for square in self.active_shape.squares:
+            if (square.x, square.y) in self.corner_coordinates:
+                return True
+            if (square.x, square.y2) in self.corner_coordinates:
+                return True
+            if (square.x2, square.y) in self.corner_coordinates:
+                return True
+            if (square.x2, square.y2) in self.corner_coordinates:
+                return True
+
+        return False
 
 
-
-        print("valid move.")
-        ## Updated grid_squares
-        for square in considered_squares:
-            square.occupied = True
-
-        return True
-
-    ## rotation or mirroring of the active shape
+    # rotation or mirroring of the active shape
     def rotationEvent(self, event):
         if not self.active_shape:
             return
@@ -316,11 +354,8 @@ class Board(object):
         print("about to event active shape rotate method")
         self.active_shape.rotate(event.keysym)
         print("exited active shape rotate method")
-        ## requres coordinates, but is only being used to redraw
+        # requres coordinates, but is only being used to redraw
         return self.updateCoords(self.mouse_x, self.mouse_y)
-
-
-
 
     class Square(object):
 
@@ -334,7 +369,6 @@ class Board(object):
             self.occupied       = False         ## used only by the grid squares
             self.off_grid       = False         ## used only by the pieces
             self.to_fore        = False         ## flag for view to raise to uppermost position
-
 
     class Shape(object):
 
@@ -465,33 +499,12 @@ class Board(object):
 
         def check_face_contact(self, active_shape):
             """
-                Evaluates each square in active_shape for face-to-face contact with
-                the squares within the shaped this method is called from.
+            Evaluates each square in active_shape for face-to-face contact with
+            the squares within the shaped this method is called from.
+            Meant to be called when self or active_shape has already been played.
 
             :param active_shape: passed from Board
             :return: True in the event of surface contact
-
-
-
-            Idea; Iterate through all shapes. Only check for validity against
-                a) shapes that have been placed
-                b) shapes of the same color.
-            with those restrictions already in place, it should be evaluating each square in a placed_shape
-            against each square in the active_shape.  There are 4 potential surfaces to check for contact.
-            That would be: (active_square == placed_square)
-                1 (top of square):  (x1,y1) == (x1,y2) && (x2, y1) == (x2, y2)
-                2 (right of square): (x2, y1) == (x1,y1) && (x2, y2) == (x1,y2)
-                3 (bottom): (x1,y2) == (x1,y1) && (x2,y2) == (x2,y1)
-                4 (left): (x1,y1) == (x2,y1) && (x1,y2) == (x2, y2)
-
-            That would return False.
-
-
-           Another round of checks is required to see if an active_square is touching corners with a played square.
-           That will require another layer of iteration through every corner combination between the two squares.
-
-
-
 
             """
 
@@ -535,3 +548,43 @@ class Board(object):
             # No surface contact
             return False
 
+        def check_corner_contact(self, active_shape):
+            """
+            Checks the squares in self.squares for corner contact with the squares in active_shape.squares
+
+            Meant to be called when self or active_shape is a square already played.
+
+            :param active_shape:  Square
+            :return: True if corner contact is made
+            """
+
+            for active_square in active_shape.squares:
+                for current_square in self.squares:
+                    # shortening variable names for legibility
+                    ax = active_square.x
+                    ax2 = active_square.x2
+                    ay = active_square.y
+                    ay2 = active_square.y2
+
+                    cx = current_square.x
+                    cx2 = current_square.x2
+                    cy = current_square.y
+                    cy2 = current_square.y2
+
+                    # Checking top left to bottom right
+                    if ax == cx2 and ay == cy2:
+                        print('top left ot bottom right contact')
+                        return True
+                    # Checking top right to bottom right contact
+                    if ax2 == cx and ay == cy2:
+                        print('top right to bottom left contact')
+                        return True
+                    # Checking bottom right to top left contact
+                    if ax2 == cx and ay2 == cy:
+                        print('bottom right to top left contact')
+                        return True
+                    # Checking bottom left to top right contact
+                    if ax == cx2 and ay2 == cy:
+                        print("bottom left:top right contact")
+                        return True
+            return False
