@@ -270,8 +270,34 @@ class Board(object):
             ######  Need to ensure piece is corner-to-corner with another piece of the same color
             ######  AND no surface-to-surface contact is occuring between same-colored pieces. 
             ###### 
-        
+       
+       
+            Idea; Iterate through all shapes. Only check for validity against
+                a) shapes that have been placed
+                b) shapes of the same color. 
+            with those restrictions already in place, it should be evaluating each square in a placed_shape
+            against each square in the active_shape.  There are 4 potential surfaces to check for contact.
+            That would be: (active_square == placed_square)
+                1 (top of square):  (x1,y1) == (x2,y1) && (x2, y1) == (x2, y2)
+                2 (right of square): (x2, y1) == (x1,y1) && (x2, y2) == (x1,y2)
+                3 (bottom): (x1,y2) == (x1,y1) && (x2,y2) == (x2,y1)
+                4 (left): (x1,y1) == (x2,y1) && (x1,y2) == (x2, y2)
+                
+            That would return False.
+            
+            
+           Another round of checks is required to see if an active_square is touching corners with a played square. 
+           That will require another layer of iteration through every corner combination between the two squares.
+         
+           
         """
+
+        # Checking for surface contact with friendly shape
+        for shape in self.shapes:                       # Boards list of player shapes
+            if shape.placed and shape.color == self.current_player:
+                if shape.check_face_contact(self.active_shape):
+                    return False
+
 
 
 
@@ -436,3 +462,76 @@ class Board(object):
 
                     square.y = new_y
                     square.y2 = new_y + self.side_length
+
+        def check_face_contact(self, active_shape):
+            """
+                Evaluates each square in active_shape for face-to-face contact with
+                the squares within the shaped this method is called from.
+
+            :param active_shape: passed from Board
+            :return: True in the event of surface contact
+
+
+
+            Idea; Iterate through all shapes. Only check for validity against
+                a) shapes that have been placed
+                b) shapes of the same color.
+            with those restrictions already in place, it should be evaluating each square in a placed_shape
+            against each square in the active_shape.  There are 4 potential surfaces to check for contact.
+            That would be: (active_square == placed_square)
+                1 (top of square):  (x1,y1) == (x1,y2) && (x2, y1) == (x2, y2)
+                2 (right of square): (x2, y1) == (x1,y1) && (x2, y2) == (x1,y2)
+                3 (bottom): (x1,y2) == (x1,y1) && (x2,y2) == (x2,y1)
+                4 (left): (x1,y1) == (x2,y1) && (x1,y2) == (x2, y2)
+
+            That would return False.
+
+
+           Another round of checks is required to see if an active_square is touching corners with a played square.
+           That will require another layer of iteration through every corner combination between the two squares.
+
+
+
+
+            """
+
+            for active_square in active_shape.squares:
+                for current_square in self.squares:
+                    # shortening variable names for legibility
+                    ax = active_square.x
+                    ax2 = active_square.x2
+                    ay = active_square.y
+                    ay2 = active_square.y2
+
+                    cx = current_square.x
+                    cx2 = current_square.x2
+                    cy = current_square.y
+                    cy2 = current_square.y2
+
+                    # Checking for contact on top of active squares
+                    if ax == cx and ay == cy2:  # top left to bottom left corner check
+                        if ax2 == cx2 and cy2:  # top right to bottom right corner check
+                            print("Contact - top")
+                            return True
+
+                    # Checking for contact on right side of active squares
+                    if ax2 == cx and ay == cy:       # top right to top left corner check
+                        if ax2 == cx and ay2 == cy2: # bottom right to bottom left corner check
+                            print("Contact - right")
+                            return True
+
+                    # Checking for contact on bottom of active squares
+                    if ax == cx and ay2 == cy:        # bottom left to top left check
+                        if ax2 == cx2 and ay2 == cy:  # bottom right to top right check
+                            print('Contact - bottom')
+                            return True
+
+                    # Checking for contact on left of active squares
+                    if ax == cx2 and ay == cy:          # top left to top right
+                        if ax == cx2 and ay2 == cy2:    # bottom left to bottom right
+                            print('Contact - left')
+                            return True
+
+            # No surface contact
+            return False
+
