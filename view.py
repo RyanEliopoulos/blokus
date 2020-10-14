@@ -1,24 +1,21 @@
 """
                 So obviously the model knows each squareID. It knows tkinters generation algorithms.
 
-                1) Need to update the board with player turn indicator
-                2) Need button that allows players to indicate the game is over and point tallying should begin.
-
-
 """
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-import time
 
 
 class View(object):
 
     def __init__(self, height, width):
         # Build tk components
-        self.root       = self._initRoot()
-        self.mainframe  = self._initFrame()
-        self.canvas     = self._initCanvas(height, width)
+        self.root           = self._initRoot()
+        self.mainframe      = self._initFrame()
+        self.canvas         = self._initCanvas(height, width)
+        self.turn_indicator = None  # Label widget belonging to mainframe
+
         # callback functions
         self.endgame_listener = None
         self.reset_function = None
@@ -38,7 +35,7 @@ class View(object):
     # Used at creation
     def _initCanvas(self, height, width):
         new_canvas = Canvas(self.mainframe, height=height, width=width)
-        new_canvas.grid(column=0, row=0, sticky=(N, S, E, W))
+        new_canvas.grid(column=0, row=1, sticky=(N, S, E, W))
         return new_canvas
 
     # Binding controller method to mouse movement
@@ -68,9 +65,6 @@ class View(object):
         end_game_message = self.endgame_listener()
         print(end_game_message)
         #  Need to update the screen now instead of printing to console
-        #end_window = Toplevel(master=self.root)
-        #end_window.geometry("1500x1500")
-        #end_window.title(f"{results[0]} won the game!")
         end_game_message += "\n\nWould you like to play again?"
 
         if messagebox.askyesno("Game Over", end_game_message):
@@ -79,6 +73,9 @@ class View(object):
             self.reset(True)
         else:
             self.reset(False)
+
+    def update_turn_indicator(self, current_player):
+        self.turn_indicator.config(text=current_player + ' is the current player', foreground=current_player)
 
     # Initial screen state.
     def initScreen(self, squares):
@@ -94,6 +91,11 @@ class View(object):
         # Constructing game end button
         button = Button(self.mainframe, text="End Game", command=self.endgame)
         button.grid(column=1, row=0, stick=(N, S, E, W))
+
+        # Constructing "current player" indicator
+        self.turn_indicator = Label(self.mainframe, text="Stand In")
+        self.turn_indicator.grid(column=0, row=0)
+
 
     # Update the square positions on screen
     def updateScreen(self, squares):
