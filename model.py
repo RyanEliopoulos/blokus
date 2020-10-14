@@ -3,9 +3,9 @@
 
     1)x-axis mirror and right rotation now work.  Need to add their counterparts
 
-    3) Update view to take a dictionary of square data rather than the list of list.
+    2) Update view to take a dictionary of square data rather than the list of list.
 
-
+    3) Need to add a point mechanism.
 
 
     @@BUGS:
@@ -280,6 +280,8 @@ class Board(object):
 
         # Checking for corner contact with the initial spawning positions
         if self.spawn_placement_check():
+            for square in considered_squares:
+                square.occupied = True
             return True
 
         print('Invalid move - No corner contact between friendly shapes')
