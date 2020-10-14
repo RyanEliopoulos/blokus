@@ -6,9 +6,15 @@
     2)  Need to handle player count and initial spawn locations.  Then beef up valid move logic to restrict
         moves to spawn corner or those adjacent to pieces already played.
 
-    3)  Need to start implementing the idea of players and turns.
+    3) Update view to take a dictionary of square data rather than the list of list.
 
-    4) Update view to take a dictionary of square data rather than the list of list.
+
+
+
+    @@BUGS:
+        Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
+        Piece isn't considered played and the player's turn isn't over.  Seems like it might be when the mouse is
+        over the exact coordinates of the line separating the grid squares.
 
 """
 
@@ -23,8 +29,9 @@ class Board(object):
         self.padding        = 5         ## space between window edge and grid edge
 
         ## player-related settings
-        self.player_count   = None      ## updated by controller
-        self.player_slots   = ['red', 'blue', 'green', 'yellow']
+        self.player_count   = 2      ## updated by controller
+        self.player_slots   = ['red', 'blue']
+        self.current_player = 'red'
 
         ## graphics
         self.grid_squares   = []        ## Square objects representing the grid
@@ -60,7 +67,7 @@ class Board(object):
         self.shapes.append(new_shape)
         self.shapes.append(other_shape)
 
-    ## Build out initial screen state
+    # Build out initial screen state
     def initScreen(self):
 
         """
@@ -72,6 +79,7 @@ class Board(object):
 
         :return: List of lists: x, y, x2, y2, (fill color string). Feeds into the view
         """
+
         dimensions = []
 
         ## First take care of grid
@@ -196,19 +204,20 @@ class Board(object):
 
         return coords
 
-    ## Processing mouse click
+    # Processing mouse click
     def clickEvent(self, event):
 
-        ## Potentially picking a piece
+        # Potentially picking a piece
         if self.active_shape is None:
-            ## check if click is within a shape.
+            # check if click is within a shape.
             for shape in self.shapes:
                 if shape.clicked(event.x, event.y) and not shape.placed:
-                    #print(f"new active shape: {shape}")
-                    self.active_shape = shape
-                    return
+                    # Checking if the clicked shape matches active player
+                    if shape.color == self.current_player:
+                        self.active_shape = shape
+                        return
 
-        ## Or dropping a piece
+        # Or dropping a piece
         else:
             if self.snap_square:  ## indicates we are currently on grid
                 ## Checking if move is valid
@@ -216,11 +225,16 @@ class Board(object):
                     self.active_shape.placed = True
                     self.active_shape.active_square = None
                     self.active_shape = None
-                    ####
-                #### CHANGE PLAYER TURN
+                    self.update_current_player()
             else:  # clicked off grid -- respawn or drop piece where it is?
                 self.active_shape.active_square = None
-                self.active_shape               = None
+                self.active_shape = None
+
+    def update_current_player(self):
+        if self.current_player == 'red':
+            self.current_player = 'blue'
+        else:
+            self.current_player = 'red'
 
 
     ### Called when a click event happens with an active shape
