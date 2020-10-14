@@ -73,13 +73,13 @@ class View(object):
             y2 = square[3]
             fill = square[4]
             item_number = square[5]
+            bring_fore = square[6]      # Bool indicating square at top layer.
 
             print(f'this is a square {square}')
             self.canvas.itemconfigure(item_number, fill=fill)
             self.canvas.coords(item_number, x, y, x2, y2)
-            if fill == 'pink':      ## Need obstructed squares to show at the highest level
+            if bring_fore:
                 self.canvas.tag_raise(item_number)
-
 
     ## Begin main program loop
     def beginLoop(self):
