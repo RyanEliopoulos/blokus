@@ -7,6 +7,9 @@
 
     3) Need to add a point mechanism.
 
+    4) Update shape spawning to be creating a "spawn set" or something.  Make multiple copies for the players.
+        Might as well update the shape spawn algorithm to not include overlapping squares.
+
 
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
@@ -20,9 +23,9 @@ class Board(object):
 
     def __init__(self):
         # Board layout
-        self.side_length       = 50
-        self.columns           = 10
-        self.rows              = 10
+        self.side_length       = 25
+        self.columns           = 20
+        self.rows              = 20
         self.padding           = 5         ## space between window edge and grid edge
         self.corner_coordinates = []
 
@@ -356,8 +359,39 @@ class Board(object):
         print("about to event active shape rotate method")
         self.active_shape.rotate(event.keysym)
         print("exited active shape rotate method")
-        # requres coordinates, but is only being used to redraw
+        # requires coordinates, but is only being used to redraw
         return self.updateCoords(self.mouse_x, self.mouse_y)
+
+    def endgame(self):
+        print("in model...ending game")
+        # Tally points and declare a winner
+        player_scores = []
+        for player in self.player_slots:
+            score = 0
+            for shape in self.shapes:
+                if shape.color == player and shape.placed:
+                    score += len([square for square in shape.squares])
+            player_scores.append((player, score))
+
+        # Sorting (player, score) values
+        def srt(scrs):
+            return scrs[1]
+        player_scores.sort(key=srt)
+        player_scores.reverse()
+        # Need to check for ties
+        highest_score = player_scores[0][1]
+        winning_colors = [x[0] for x in player_scores if x[1] == highest_score]
+
+        winners_string = ''
+        if len(winning_colors) == 1:
+            winners_string = f"{winning_colors[0]} wins with {highest_score} points!"
+        else:
+            winners_string = 'It\' a tie between '
+            for color in winning_colors:
+                winners_string += f'({color}) '
+            winners_string += f'with {highest_score} points!'
+
+        return winners_string
 
     class Square(object):
 
