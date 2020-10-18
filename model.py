@@ -7,8 +7,6 @@
 
     3) Add reference image to the repo showing the default piece configuration relative spawn orientation.
 
-    4) Fix Shape's spawn algorithm to avoid overlapping squares when double backing.
-
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
         Piece isn't considered played and the player's turn isn't over.  Seems like it might be when the mouse is
@@ -442,6 +440,7 @@ class Board(object):
         ## puts shape at initial position. Can be used for respawns
         def spawn(self, anchor_x, anchor_y, build_order, side_length, square_count, color):
 
+            used_points = []                # Prevents doubled-up squares
             for direction in build_order:
                 if direction == 'U':
                     anchor_y = anchor_y - side_length
@@ -452,15 +451,17 @@ class Board(object):
                 elif direction == 'R':
                     anchor_x = anchor_x + side_length
 
-                new_square = Board.Square(anchor_x,
-                                    anchor_y,
-                                    anchor_x + side_length,
-                                    anchor_y + side_length,
-                                    square_count + 1,
-                                    color)
-                print(f"new square..square count is: {square_count}")
-                self.squares.append(new_square)
-                square_count += 1
+                if (anchor_x, anchor_y) not in used_points:
+                    new_square = Board.Square(anchor_x,
+                                        anchor_y,
+                                        anchor_x + side_length,
+                                        anchor_y + side_length,
+                                        square_count + 1,
+                                        color)
+                    print(f"new square..square count is: {square_count}")
+                    self.squares.append(new_square)
+                    square_count += 1
+                    used_points.append((anchor_x, anchor_y))
 
         ## Passes fields to create/modify canvas.rectangle stuff
         def getCoords(self):
