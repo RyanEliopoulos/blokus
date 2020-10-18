@@ -5,11 +5,10 @@
 
     2) Update view to take a dictionary of square data rather than the list of list.
 
-    3) Need to add a point mechanism.
-
-    4) Update shape spawning to be creating a "spawn set" or something.  Make multiple copies for the players.
+    3) Update shape spawning to be creating a "spawn set" or something.  Make multiple copies for the players.
         Might as well update the shape spawn algorithm to not include overlapping squares.
 
+    4) Add reference image to the repo showing the default piece configuration relative spawn orientation.
 
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
@@ -42,9 +41,8 @@ class Board(object):
         # Logic variables
         self.mouse_x        = -1
         self.mouse_y        = -1
-        self.square_count   = 0
+        self.square_count   = 0         # passed to Shape so squares can ID themselves when passed to View.
         self.snap_square    = None      ## grid square occupied by the cursor
-
 
     # Starting pieces
     def initShapes(self):
@@ -53,21 +51,19 @@ class Board(object):
 
         :return: None
         """
-        new_shape = self.Shape(700, 600, ['X', 'D', 'R'], 'red', self.side_length, self.square_count)
-        self.square_count += len(new_shape.squares)
-        other_shape = self.Shape(700, 300, ['X', 'U', 'U', 'U'], 'red', self.side_length, self.square_count)
-        self.square_count += len(other_shape.squares)
+        new_set = self.SpawnSet()
+        print(f"squares before spawning red set:{self.square_count}")
+        red_items = new_set.spawn('red', 200, 600, self.side_length, self.square_count)
+        self.square_count += red_items['new_squares']
+        self.shapes.extend(red_items['shapes'])
+        print(f"squares after spawning red set:{self.square_count}")
 
-        self.shapes.append(new_shape)
-        self.shapes.append(other_shape)
+        print(f"squares before spawning blue set:{self.square_count}")
+        blue_items = new_set.spawn('blue', 500, 600, self.side_length, self.square_count)
+        self.square_count += blue_items['new_squares']
+        self.shapes.extend(blue_items['shapes'])
+        print(f"squares after spawning blue set:{self.square_count}")
 
-        new_shape = self.Shape(500, 600, ['X', 'D', 'R'], 'blue', self.side_length, self.square_count)
-        self.square_count += len(new_shape.squares)
-        other_shape = self.Shape(500, 300, ['X', 'U', 'U', 'U'], 'blue', self.side_length, self.square_count)
-        self.square_count += len(other_shape.squares)
-
-        self.shapes.append(new_shape)
-        self.shapes.append(other_shape)
 
     # Build out initial screen state
     def initScreen(self):
@@ -386,7 +382,7 @@ class Board(object):
         if len(winning_colors) == 1:
             winners_string = f"{winning_colors[0]} wins with {highest_score} points!"
         else:
-            winners_string = 'It\' a tie between '
+            winners_string = 'It\'s a tie between '
             for color in winning_colors:
                 winners_string += f'({color}) '
             winners_string += f'with {highest_score} points!'
@@ -624,3 +620,166 @@ class Board(object):
                         print("bottom left:top right contact")
                         return True
             return False
+
+    class SpawnSet(object):
+
+        def __init__(self):
+            """
+                This is:
+                    1).The collection of Shape build orders used to construct and place the pieces for each player.
+                    2).A collection of relative positions each shape will occupy (a, b, , ) as well as
+                       ( , , x, y) offsets.
+
+                Each build order begins in the top-left most square of the shapes.
+                Double backing does occur.
+
+                build_orders is populated in the same order as each shape is meant to be spawned in.
+                This is based on an attempt to present all shapes in a compact manner.
+
+                I should add a reference image to the repo.
+            """
+
+            #   1). Constructing the shape build orders
+            self.build_orders = []
+
+            #   2). Spawn locations of each shape relative to the first spawned.
+            #     Distance is counted in square lengths
+            self.spawn_positions = []
+
+            #   [][][][]
+            #   []
+            self.build_orders.append(['X', 'D', 'U', 'R', 'R', 'R'])
+            self.spawn_positions.append((0, 0, 0, 0))
+
+            #   [][][][]
+            #       []
+            self.build_orders.append(['X', 'R', 'R', 'R', 'L', 'D'])
+            self.spawn_positions.append((4, 0, 2, 0))
+
+            #   [][][][][]
+            self.build_orders.append(['X', 'R', 'R', 'R', 'R'])
+            self.spawn_positions.append((1, 1, 1, 1))
+
+            #       []
+            #     [][]
+            #   [][]
+            self.build_orders.append(['X', 'D', 'L', 'D', 'L'])
+            self.spawn_positions.append((7, 1, 4, 3))
+
+            #   [][]
+            #     []
+            #   [][]
+            self.build_orders.append(['X', 'R', 'D', 'D', 'L'])
+            self.spawn_positions.append((0, 2, 0, 2))
+
+            #   [][][][]
+            self.build_orders.append(['X', 'R', 'R', 'R'])
+            self.spawn_positions.append((2, 2, 1, 2))
+
+            #   [][][]
+            #   []
+            #   []
+            self.build_orders.append(['X', 'R', 'R', 'L', 'L', 'D', 'D'])
+            self.spawn_positions.append((2, 3, 1, 3))
+
+            #     []
+            #   [][]
+            #   [][]
+            self.build_orders.append(['X', 'D', 'D', 'L', 'U'])
+            self.spawn_positions.append((7, 3, 7, 4))
+
+            #   [][][]
+            #     []
+            #     []
+            self.build_orders.append(['X', 'R', 'R', 'L', 'D', 'D'])
+            self.spawn_positions.append((3, 4, 3, 4))
+
+            #   [][]
+            #   []
+            #   []
+            self.build_orders.append(['X', 'R', 'L', 'D', 'D'])
+            self.spawn_positions.append((0, 5, 0, 3))
+
+            #       []
+            #   [][][]
+            #     []
+            self.build_orders.append(['X', 'D', 'L', 'L', 'R', 'D'])
+            self.spawn_positions.append((3, 5, 2, 5))
+
+            #   []
+            #   [][][]
+            #       []
+            self.build_orders.append(['X', 'D', 'R', 'R', 'D'])
+            self.spawn_positions.append((5, 5, 6, 5))
+
+            #     []
+            #   [][][]
+            #     []
+            self.build_orders.append(['X', 'D', 'L', 'R', 'R', 'L', 'D'])
+            self.spawn_positions.append((1, 7, 1, 6))
+
+
+            #   []
+            #   []
+            #   []
+            self.build_orders.append(['X', 'D', 'D'])
+            self.spawn_positions.append((3, 7, 3, 6))
+
+            #   [][]
+            #   [][]
+            self.build_orders.append(['X', 'R', 'D', 'L'])
+            self.spawn_positions.append((4, 7, 4, 6))
+
+            #   []
+            #   [][]
+            #     []
+            #     []
+            self.build_orders.append(['X', 'D', 'R', 'D', 'D'])
+            self.spawn_positions.append((6, 7, 5, 6))
+
+            #   []
+            #   [][]
+            self.build_orders.append(['X', 'D', 'R'])
+            self.spawn_positions.append((0, 9, 0, 9))
+
+            #   []
+            #   [][]
+            #     []
+            self.build_orders.append(['X', 'D', 'R', 'D'])
+            self.spawn_positions.append((2, 9, 2, 8))
+
+            #   [][][]
+            #     []
+            self.build_orders.append(['X', 'R', 'R', 'L', 'D'])
+            self.spawn_positions.append((4, 9, 4, 7))
+
+            #   []
+            #   []
+            self.build_orders.append(['X', 'D'])
+            self.spawn_positions.append((4, 10, 3, 8))
+
+            # []
+            self.build_orders.append(['X'])
+            self.spawn_positions.append((5, 11, 4, 9))
+
+        def spawn(self, color, origin_x, origin_y, square_length, square_count):
+            """
+            Each spawn set is arranged in a rectangular shape.  The origin_x, origin_y
+            coordinates denote the top-left of this rectangular shape.
+            """
+            bo_and_positions = zip(self.build_orders, self.spawn_positions)
+            pad = 5
+            shapes = []
+            for tup in tuple(bo_and_positions):
+                anchor_x = origin_x + (tup[1][0] * square_length) + (tup[1][2] * pad)
+                anchor_y = origin_y + (tup[1][1] * square_length) + (tup[1][3] * pad)
+                new_shape = Board.Shape(anchor_x, anchor_y, tup[0], color, square_length, square_count)
+                shapes.append(new_shape)
+                square_count += len(new_shape.squares)
+
+            results = {}
+            results["shapes"] = shapes
+            results['new_squares'] = sum([len(shape.squares) for shape in shapes])
+            val = results['new_squares']
+            print(f"additional squares:{val}")
+            return results
