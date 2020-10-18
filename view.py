@@ -1,6 +1,8 @@
 """
                 So obviously the model knows each squareID. It knows tkinters generation algorithms.
 
+
+
 """
 from tkinter import *
 from tkinter import ttk
@@ -11,8 +13,8 @@ class View(object):
 
     def __init__(self, height, width):
         # Build tk components
-        self.root           = self._initRoot()
-        self.mainframe      = self._initFrame()
+        self.root           = self._initRoot(height, width)
+        self.mainframe      = self._initFrame(height, width)
         self.canvas         = self._initCanvas(height, width)
         self.turn_indicator = None  # Label widget belonging to mainframe
 
@@ -20,16 +22,21 @@ class View(object):
         self.endgame_listener = None
         self.reset_function = None
 
+        # Working variables
+        self.button_var = IntVar(value=2)# radio button value for player count
+
     # Used at creation
-    def _initRoot(self):
+    def _initRoot(self, height, width):
         new_root = Tk()
         new_root.title("Blockus")
+        #new_root.configure(height=height, width=width)
+        new_root.geometry("1920x1080+0+0")
         new_root.columnconfigure(0, weight=1)
         new_root.rowconfigure(0, weight=1)
         return new_root
     # Used at creation
-    def _initFrame(self):
-        new_frame = ttk.Frame(self.root)
+    def _initFrame(self, height, width):
+        new_frame = ttk.Frame(self.root, height=height, width=width)
         new_frame.grid(column=0, row=0, sticky=(N, S, W, E))
         return new_frame
     # Used at creation
@@ -86,7 +93,7 @@ class View(object):
         """
         for opts in squares:
             new_item = self.canvas.create_rectangle(opts[0], opts[1], opts[2], opts[3], fill=opts[4])
-            print(new_item)
+            #print(new_item)
 
         # Constructing game end button
         button = Button(self.mainframe, text="End Game", command=self.endgame)
@@ -111,12 +118,44 @@ class View(object):
             item_number = square[5]
             bring_fore = square[6]      # Bool indicating square at top layer.
 
-            print(f'this is a square {square}')
+            #print(f'this is a square {square}')
             self.canvas.itemconfigure(item_number, fill=fill)
             self.canvas.coords(item_number, x, y, x2, y2)
             if bring_fore:
                 self.canvas.tag_raise(item_number)
 
+    def build_player_inquiry(self, controller_count_callback):
+        """
+            Attach 3 radio buttons and a messagebox.askyesno to the canvas.
+            Return the results
+        :return: integer in range (2, 4) inclusive
+        """
+
+        first_button = Radiobutton(master=self.canvas, text="2 Player", variable=self.button_var, value=2)
+        first_button.grid(column=0, row=0, sticky=(N, S, E, W))
+
+        second_button = Radiobutton(master=self.canvas, text="3 Player", variable=self.button_var, value=3)
+        second_button.grid(column=1, row=0, sticky=(N, S, E, W))
+
+        third_button = Radiobutton(master=self.canvas, text="4 Player", variable=self.button_var, value=4)
+        third_button.grid(column=2, row=0, sticky=(N, S, E, W))
+
+        ok_button = Button(master=self.canvas, text='OK', command=controller_count_callback)
+        ok_button.grid(column=0, row=1, sticky=(N, S, E, W))
+
+    def get_button_var(self):
+        return self.button_var.get()
+
+    def playercount_teardown(self):
+        executioners_list = self.canvas.winfo_children()
+        for item in executioners_list:
+            item.destroy()
+
+        # Need to resize these for some reason, otherwise
+        self.mainframe.configure(height=1000, width=1000)
+        self.canvas.configure(height=1000, width=1000)
+
     # Begin main program loop
     def beginLoop(self):
         self.root.mainloop()
+

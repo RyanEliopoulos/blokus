@@ -17,9 +17,11 @@ class Controller(object):
         self.boardView.setKeyListener(self.keyListener)
         self.boardView.set_endgame_listener(self.endgame_listener)
         self.boardView.set_reset(self.reset_listener)
+        self.boardView.build_player_inquiry(self.playercount_callback)
 
-        self.boardView.initScreen(self.boardModel.initScreen())
-        self.boardView.update_turn_indicator(self.boardModel.current_player)
+        # Initializing board and screen
+        #self.boardView.initScreen(self.boardModel.initScreen())
+        #self.boardView.update_turn_indicator(self.boardModel.current_player)
 
         ############################################
         ## Begin
@@ -62,3 +64,18 @@ class Controller(object):
         else:
             print("exiting game")
             exit(0)
+
+    def playercount_callback(self):
+        playercount = self.boardView.get_button_var()
+        print(f"In callback..playercount:{playercount}")
+        # Checking if user made a selection before pressing OK
+        if playercount == 0:
+            return
+        # Informing model of the player count
+        self.boardModel.set_playercount(playercount)
+        # And tearing down the player-count GUI
+        self.boardView.playercount_teardown()
+
+        # Initializing board and screen
+        self.boardView.initScreen(self.boardModel.initScreen())
+        self.boardView.update_turn_indicator(self.boardModel.current_player)
