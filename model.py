@@ -7,6 +7,7 @@
 
     3) Add reference image to the repo showing the default piece configuration relative spawn orientation.
 
+
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
         Piece isn't considered played and the player's turn isn't over.  Seems like it might be when the mouse is
@@ -26,9 +27,9 @@ class Board(object):
         self.corner_coordinates = []
 
         # player-related settings
-        self.player_count   = 2      ## updated by controller
-        self.player_slots   = ['red', 'blue', 'green', 'orange']
-        self.current_player = 'red'
+        self.playercount    = 0         # updated by controller
+        self.player_slots   = ['blue', 'orange', 'red', 'green']
+        self.current_player = 'blue'
 
         # graphics
         self.grid_squares   = []        ## Square objects representing the grid
@@ -49,30 +50,30 @@ class Board(object):
         :return: None
         """
         new_set = self.SpawnSet()
-        print(f"squares before spawning red set:{self.square_count}")
+        #print(f"squares before spawning red set:{self.square_count}")
         red_items = new_set.spawn('red', 100, 600, self.side_length, self.square_count)
         self.square_count += red_items['new_squares']
         self.shapes.extend(red_items['shapes'])
-        print(f"squares after spawning red set:{self.square_count}")
+        #print(f"squares after spawning red set:{self.square_count}")
 
-        print(f"squares before spawning blue set:{self.square_count}")
+        #print(f"squares before spawning blue set:{self.square_count}")
         blue_items = new_set.spawn('blue', 400, 600, self.side_length, self.square_count)
         self.square_count += blue_items['new_squares']
         self.shapes.extend(blue_items['shapes'])
-        print(f"squares after spawning blue set:{self.square_count}")
+        #print(f"squares after spawning blue set:{self.square_count}")
 
 
-        print(f"squares before spawning blue set:{self.square_count}")
+        #print(f"squares before spawning blue set:{self.square_count}")
         green_items = new_set.spawn('green', 700, 600, self.side_length, self.square_count)
         self.square_count += green_items['new_squares']
         self.shapes.extend(green_items['shapes'])
-        print(f"squares after spawning blue set:{self.square_count}")
+        #print(f"squares after spawning blue set:{self.square_count}")
 
-        print(f"squares before spawning blue set:{self.square_count}")
+        #print(f"squares before spawning blue set:{self.square_count}")
         orange_items = new_set.spawn('orange', 700, 200, self.side_length, self.square_count)
         self.square_count += orange_items['new_squares']
         self.shapes.extend(orange_items['shapes'])
-        print(f"squares after spawning blue set:{self.square_count}")
+        #print(f"squares after spawning blue set:{self.square_count}")
 
     # Build out initial screen state
     def initScreen(self):
@@ -115,6 +116,10 @@ class Board(object):
 
         ## and send them to the view for drawing
         return dimensions
+
+    # used to determine scoring methodology
+    def set_playercount(self, playercount):
+        self.playercount = playercount
 
     ## Processing mouse movement.  Probably the most complex method.
     ## Responsible for snap-to-grid / smooth movement detection
@@ -186,6 +191,10 @@ class Board(object):
                         square.fill = 'pink'
                     elif self.active_shape.color == 'blue':
                         square.fill = 'light blue'
+                    elif self.active_shape.color == 'green':
+                        square.fill = 'light green'
+                    elif self.active_shape.color == 'orange':
+                        square.fill = 'yellow'
 
         ## Smooth movement - shape is not snapped to grid
         else:
@@ -365,40 +374,66 @@ class Board(object):
         if not self.active_shape:
             return
 
-        print("about to event active shape rotate method")
+        #print("about to event active shape rotate method")
         self.active_shape.rotate(event.keysym)
-        print("exited active shape rotate method")
+        #print("exited active shape rotate method")
         # requires coordinates, but is only being used to redraw
         return self.updateCoords(self.mouse_x, self.mouse_y)
 
     def endgame(self):
         print("in model...ending game")
         # Tally points and declare a winner
-        player_scores = []
+        player_scores = dict()
         for player in self.player_slots:
             score = 0
             for shape in self.shapes:
                 if shape.color == player and shape.placed:
                     score += len([square for square in shape.squares])
-            player_scores.append((player, score))
-
-        # Sorting (player, score) values
-        def srt(scrs):
-            return scrs[1]
-        player_scores.sort(key=srt)
-        player_scores.reverse()
-        # Need to check for ties
-        highest_score = player_scores[0][1]
-        winning_colors = [x[0] for x in player_scores if x[1] == highest_score]
+            player_scores[player] = score
 
         winners_string = ''
-        if len(winning_colors) == 1:
-            winners_string = f"{winning_colors[0]} wins with {highest_score} points!"
-        else:
-            winners_string = 'It\'s a tie between '
-            for color in winning_colors:
-                winners_string += f'({color}) '
-            winners_string += f'with {highest_score} points!'
+
+        if self.playercount == 2:
+            # blue/red VS yellow/green
+            bluered = player_scores['red'] + player_scores['blue']
+            orangegreen = player_scores['orange'] + player_scores['green']
+            if bluered == orangegreen:
+                winners_string = f"It is a tie with {bluered} points each!"
+            elif bluered > orangegreen:
+                winners_string = f"blue/red wins with {bluered} points!"
+            else:
+                winners_string = f"yellow/green wins with {orangegreen} points!"
+
+        else:  # 3 and 4 players is basically the same.
+            # Discount green in this scenario since it is last to act
+            # and is the "shared" color.
+
+            color_scores = []
+            color_scores.append(('red', player_scores['red']))
+            color_scores.append(('blue', player_scores['blue']))
+            color_scores.append(('orange', player_scores['orange']))
+            color_scores.append(('green', player_scores['green']))
+
+            if self.playercount == 3:
+                color_scores.pop()
+
+            # Sorting (player, score) values
+            def srt(scrs):
+                return scrs[1]
+            color_scores.sort(key=srt)
+            color_scores.reverse()
+            # Need to check for ties
+            highest_score = color_scores[0][1]
+            winning_colors = [x[0] for x in color_scores if x[1] == highest_score]
+
+            winners_string = ''
+            if len(winning_colors) == 1:
+                winners_string = f"{winning_colors[0]} wins with {highest_score} points!"
+            else:
+                winners_string = 'It\'s a tie between '
+                for color in winning_colors:
+                    winners_string += f'({color}) '
+                winners_string += f'with {highest_score} points!'
 
         return winners_string
 
@@ -458,7 +493,7 @@ class Board(object):
                                         anchor_y + side_length,
                                         square_count + 1,
                                         color)
-                    print(f"new square..square count is: {square_count}")
+                    #print(f"new square..square count is: {square_count}")
                     self.squares.append(new_square)
                     square_count += 1
                     used_points.append((anchor_x, anchor_y))
