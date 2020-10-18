@@ -5,10 +5,9 @@
 
     2) Update view to take a dictionary of square data rather than the list of list.
 
-    3) Update shape spawning to be creating a "spawn set" or something.  Make multiple copies for the players.
-        Might as well update the shape spawn algorithm to not include overlapping squares.
+    3) Add reference image to the repo showing the default piece configuration relative spawn orientation.
 
-    4) Add reference image to the repo showing the default piece configuration relative spawn orientation.
+    4) Fix Shape's spawn algorithm to avoid overlapping squares when double backing.
 
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
@@ -30,7 +29,7 @@ class Board(object):
 
         # player-related settings
         self.player_count   = 2      ## updated by controller
-        self.player_slots   = ['red', 'blue']
+        self.player_slots   = ['red', 'blue', 'green', 'orange']
         self.current_player = 'red'
 
         # graphics
@@ -53,17 +52,29 @@ class Board(object):
         """
         new_set = self.SpawnSet()
         print(f"squares before spawning red set:{self.square_count}")
-        red_items = new_set.spawn('red', 200, 600, self.side_length, self.square_count)
+        red_items = new_set.spawn('red', 100, 600, self.side_length, self.square_count)
         self.square_count += red_items['new_squares']
         self.shapes.extend(red_items['shapes'])
         print(f"squares after spawning red set:{self.square_count}")
 
         print(f"squares before spawning blue set:{self.square_count}")
-        blue_items = new_set.spawn('blue', 500, 600, self.side_length, self.square_count)
+        blue_items = new_set.spawn('blue', 400, 600, self.side_length, self.square_count)
         self.square_count += blue_items['new_squares']
         self.shapes.extend(blue_items['shapes'])
         print(f"squares after spawning blue set:{self.square_count}")
 
+
+        print(f"squares before spawning blue set:{self.square_count}")
+        green_items = new_set.spawn('green', 700, 600, self.side_length, self.square_count)
+        self.square_count += green_items['new_squares']
+        self.shapes.extend(green_items['shapes'])
+        print(f"squares after spawning blue set:{self.square_count}")
+
+        print(f"squares before spawning blue set:{self.square_count}")
+        orange_items = new_set.spawn('orange', 700, 200, self.side_length, self.square_count)
+        self.square_count += orange_items['new_squares']
+        self.shapes.extend(orange_items['shapes'])
+        print(f"squares after spawning blue set:{self.square_count}")
 
     # Build out initial screen state
     def initScreen(self):
@@ -159,6 +170,10 @@ class Board(object):
                         shape_square.fill = 'pink'
                     elif shape_square.fill == 'blue':
                         shape_square.fill = 'light blue'
+                    elif shape_square.fill == 'green':
+                        shape_square.fill = 'light green'
+                    elif shape_square.fill == 'orange':
+                        shape_square.fill = 'yellow'
                 else:
                     shape_square.fill = self.active_shape.color
 
@@ -229,11 +244,11 @@ class Board(object):
                 self.active_shape = None
 
     def update_current_player(self):
-        if self.current_player == 'red':
-            self.current_player = 'blue'
+        position = self.player_slots.index(self.current_player)
+        if self.player_slots[position] == self.player_slots[-1]:
+            self.current_player = self.player_slots[0]
         else:
-            self.current_player = 'red'
-
+            self.current_player = self.player_slots[position+1]
 
     ### Called when a click event happens with an active shape
     ### Checks if the click is placing a valid move
