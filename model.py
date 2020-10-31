@@ -7,6 +7,16 @@
 
     3) Add reference image to the repo showing the default piece configuration relative spawn orientation.
 
+    4) Need a skip button so the turn rotation can continue even when players run out of moves.
+
+    5) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
+        behind the active piece instead of just listening the active piece.
+
+    6) Need a button that allows players to skip their turn.
+
+    7) The view needs to dynamically configure based on screen conditions.
+            This would mean that the view needs to inform the model of the resolution constraints in order to
+            adjust the square sizes????
 
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.

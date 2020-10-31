@@ -1,3 +1,10 @@
+10/21/2020
+	++ Accomplished goal of practicing MVC.
+	++ Need to think of how to add networked multiplayer.  Likely requires refactoring.
+	++ Should consider refactoring with performance in mind. Redrawing everything isn't great.
+
+
+
 10/14/2020
 	++ Seems like the current architecture makes it impossible for the view to contain a button whose activation should alert the model.
 	    Currently no clean way for the model to communicate to the view whose turn it is.  We need a more robust means of communication.
