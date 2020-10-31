@@ -21,6 +21,7 @@ class View(object):
         # callback functions
         self.endgame_listener = None
         self.reset_function = None
+        self.skipturn_listener = None
 
         # Working variables
         self.button_var = IntVar(value=2)# radio button value for player count
@@ -49,7 +50,7 @@ class View(object):
     def setMovementListener(self, listener):
         self.root.bind('<Motion>', listener)
 
-    ## Controller method to call on click
+    # Controller method to call on click
     def setClickListener(self, listener):
         self.root.bind('<Button-1>', listener)
 
@@ -63,6 +64,10 @@ class View(object):
 
     def set_reset(self, controller_reset_function):
         self.reset_function = controller_reset_function
+
+    def set_skipturn_listener(self, listener):
+        print("In set skipturn in view")
+        self.skipturn_listener = listener
 
     def reset(self, reset_bool):
         self.reset_function(reset_bool)
@@ -99,10 +104,13 @@ class View(object):
         button = Button(self.mainframe, text="End Game", command=self.endgame)
         button.grid(column=1, row=0, stick=(N, S, E, W))
 
+        # Constructing the skip turn button
+        skip_turn_button = Button(self.mainframe, text="Skip Turn", command=self.skipturn_listener)
+        skip_turn_button.grid(column=2, row=0, stick=(N, S, E, W))
+
         # Constructing "current player" indicator
         self.turn_indicator = Label(self.mainframe, text="Stand In")
         self.turn_indicator.grid(column=0, row=0)
-
 
     # Update the square positions on screen
     def updateScreen(self, squares):
@@ -147,6 +155,9 @@ class View(object):
         return self.button_var.get()
 
     def playercount_teardown(self):
+        """
+            Clears screen to make room for board and pieces.
+        """
         executioners_list = self.canvas.winfo_children()
         for item in executioners_list:
             item.destroy()

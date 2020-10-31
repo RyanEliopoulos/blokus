@@ -18,6 +18,7 @@ class Controller(object):
         self.boardView.set_endgame_listener(self.endgame_listener)
         self.boardView.set_reset(self.reset_listener)
         self.boardView.build_player_inquiry(self.playercount_callback)
+        self.boardView.set_skipturn_listener(self.skipturn_listener)
 
         # Initializing board and screen
         #self.boardView.initScreen(self.boardModel.initScreen())
@@ -64,6 +65,12 @@ class Controller(object):
         else:
             print("exiting game")
             exit(0)
+
+    def skipturn_listener(self):
+        print('Skipping Turn')
+        self.boardModel.update_current_player()
+        current_player = self.boardModel.current_player
+        self.boardView.update_turn_indicator(current_player)
 
     def playercount_callback(self):
         playercount = self.boardView.get_button_var()
