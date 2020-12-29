@@ -12,9 +12,7 @@
     5) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
         behind the active piece instead of just listening the active piece.
 
-    6) Need a button that allows players to skip their turn.
-
-    7) The view needs to dynamically configure based on screen conditions.
+    6) The view needs to dynamically configure based on screen conditions.
             This would mean that the view needs to inform the model of the resolution constraints in order to
             adjust the square sizes????
 

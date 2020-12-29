@@ -1,3 +1,19 @@
+11/11/2020
+    ++ for host/client expansion:
+        - Host would need to associate IP address/port traffic with a given player/color.
+        - Host is responsible for being the "decider" and updating the clients with state information?
+            Yes. Each client only needs to make one connection this way. Host can relay information to each client.
+        - Communication need only be three things:  1) A heartbeat to manage disconnections
+                                                    2) A msg regarding which piece is snapping to which grid squares
+                                                    3) A msg when a piece has been played.
+
+           This will require a way to uniquely identify pieces. Need to envision the board as an API. A Host/client
+           should be able to utilize the API just like the controller class does.
+
+10/31/2020
+    ++root.state('zoomed') is equivalent to clicking the top right square in Windows. Good stuff.
+    ==
+
 10/21/2020
 	++ Accomplished goal of practicing MVC.
 	++ Need to think of how to add networked multiplayer.  Likely requires refactoring.

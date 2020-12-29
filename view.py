@@ -30,8 +30,7 @@ class View(object):
     def _initRoot(self, height, width):
         new_root = Tk()
         new_root.title("Blockus")
-        #new_root.configure(height=height, width=width)
-        new_root.geometry("1920x1080+0+0")
+        new_root.state('zoomed')        # Like pressing the square in the top right of Windows.
         new_root.columnconfigure(0, weight=1)
         new_root.rowconfigure(0, weight=1)
         return new_root
@@ -111,6 +110,9 @@ class View(object):
         # Constructing "current player" indicator
         self.turn_indicator = Label(self.mainframe, text="Stand In")
         self.turn_indicator.grid(column=0, row=0)
+
+        print(f'root height is {self.root.winfo_height()}')
+        print(f'root width is {self.root.winfo_width()}')
 
     # Update the square positions on screen
     def updateScreen(self, squares):
