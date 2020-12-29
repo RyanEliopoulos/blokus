@@ -24,7 +24,7 @@ class View(object):
         self.skipturn_listener = None
 
         # Working variables
-        self.button_var = IntVar(value=2)# radio button value for player count
+        self.button_var = IntVar(value=2) # radio button value for player count
 
     # Used at creation
     def _initRoot(self, height, width):
@@ -56,7 +56,9 @@ class View(object):
     # listen for
     def setKeyListener(self, listener):
         self.root.bind('<Right>', listener)
+        self.root.bind('<Left>', listener)
         self.root.bind('<Up>', listener)
+        self.root.bind('<Down>', listener)
 
     def set_endgame_listener(self, listener):
         self.endgame_listener = listener

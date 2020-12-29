@@ -10,8 +10,8 @@ class Controller(object):
         # so we can play again
         self.reset = False
 
-        ##### init board
-        ## Set listeners
+        # initting board
+        # Setting listeners
         self.boardView.setMovementListener(self.mouseListener)
         self.boardView.setClickListener(self.clickListener)
         self.boardView.setKeyListener(self.keyListener)
@@ -20,11 +20,6 @@ class Controller(object):
         self.boardView.build_player_inquiry(self.playercount_callback)
         self.boardView.set_skipturn_listener(self.skipturn_listener)
 
-        # Initializing board and screen
-        #self.boardView.initScreen(self.boardModel.initScreen())
-        #self.boardView.update_turn_indicator(self.boardModel.current_player)
-
-        ############################################
         ## Begin
         self.boardView.beginLoop()
 

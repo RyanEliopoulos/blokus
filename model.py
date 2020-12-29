@@ -5,14 +5,10 @@
 
     2) Update view to take a dictionary of square data rather than the list of list.
 
-    3) Add reference image to the repo showing the default piece configuration relative spawn orientation.
-
-    4) Need a skip button so the turn rotation can continue even when players run out of moves.
-
-    5) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
+    3) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
         behind the active piece instead of just listening the active piece.
 
-    6) The view needs to dynamically configure based on screen conditions.
+    4) The view needs to dynamically configure based on screen conditions.
             This would mean that the view needs to inform the model of the resolution constraints in order to
             adjust the square sizes????
 
@@ -383,7 +379,7 @@ class Board(object):
             return
 
         #print("about to event active shape rotate method")
-        self.active_shape.rotate(event.keysym)
+        self.active_shape.transform(event.keysym)
         #print("exited active shape rotate method")
         # requires coordinates, but is only being used to redraw
         return self.updateCoords(self.mouse_x, self.mouse_y)
@@ -536,11 +532,12 @@ class Board(object):
 
         ## Rotates shape 90* in the specified direction
         ## rotation is about the active_square
-        def rotate(self, direction):
+        def transform(self, direction):
             """
 
-            :param direction:  String - 'left' or 'right' 90 degrees
-            :return:
+            :param direction:  String - 'Left' or 'Right' 90 degrees
+                                        'Up' or 'Down' to flip about the y or x axis, respectively
+            :return: None
             """
 
             """
@@ -552,9 +549,8 @@ class Board(object):
             """
 
             print("shape is rotating...")
-            if direction == 'Up':
-                ## mirror x axis
-
+            # Processing mirrors
+            if direction == 'Up':  # mirror about y axis
                 for square in self.squares:
                     if square.x < self.active_square.x:
                         square.x = self.active_square.x + (self.active_square.x - square.x)
@@ -562,31 +558,59 @@ class Board(object):
                     else:
                         square.x = self.active_square.x - (square.x - self.active_square.x)
                         square.x2 = square.x + self.side_length
-
-            ### Right 90* about the active_square
-            elif direction == 'Right':
+            elif direction == 'Down':  # mirror about x axis
                 for square in self.squares:
-
-                    ## translate vertical differences to horizontal differences
+                    if square.y < self.active_square.y:
+                        square.y = self.active_square.y + (self.active_square.y - square.y)
+                        square.y2 = square.y + self.side_length
+                    else:
+                        square.y = self.active_square.y - (square.y - self.active_square.y)
+                        square.y2 = self.active_square.y + self.side_length
+            # Processing rotations
+            elif direction == 'Right':  # Rotating 90* clockwise
+                for square in self.squares:
+                    # translate vertical differences to horizontal differences
                     horizontal_moves = abs((self.active_square.y - square.y) / self.side_length)
                     if square.y > self.active_square.y:
                         new_x = self.active_square.x - (horizontal_moves * self.side_length)
                     else:
                         new_x = self.active_square.x + (horizontal_moves * self.side_length)
 
-                    ## translate horizontal differences to vertical differences
+                    # translate horizontal differences to vertical differences
                     vertical_moves = abs((self.active_square.x - square.x) / self.side_length)
                     if square.x > self.active_square.x:
                         new_y = self.active_square.y + (vertical_moves * self.side_length)
                     else:
                         new_y = self.active_square.y - (vertical_moves * self.side_length)
-
-                    ## updating square to new reality
+                    # updating square to new reality
                     square.x = new_x
                     square.x2 = new_x + self.side_length
 
                     square.y = new_y
                     square.y2 = new_y + self.side_length
+
+            elif direction == 'Left':  # rotating 90* counter clockwise
+                for square in self.squares:
+                    # translate vertical differences to horizontal differences
+                    horizontal_moves = abs((self.active_square.y - square.y) / self.side_length)
+                    if square.y > self.active_square.y:
+                        new_x = self.active_square.x + (horizontal_moves * self.side_length)
+                    else:
+                        new_x = self.active_square.x - (horizontal_moves * self.side_length)
+
+                    # translate horizontal differences to vertical differences
+                    vertical_moves = abs((self.active_square.x - square.x) / self.side_length)
+                    if square.x > self.active_square.x:
+                        new_y = self.active_square.y - (vertical_moves * self.side_length)
+                    else:
+                        new_y = self.active_square.y + (vertical_moves * self.side_length)
+                    # updating square to new reality
+                    square.x = new_x
+                    square.x2 = new_x + self.side_length
+
+                    square.y = new_y
+                    square.y2 = new_y + self.side_length
+
 
         def check_face_contact(self, active_shape):
             """
