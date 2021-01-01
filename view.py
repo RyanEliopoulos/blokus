@@ -42,7 +42,7 @@ class View(object):
         return new_frame
     # Used at creation
     def _initCanvas(self, height, width):
-        new_canvas = Canvas(self.mainframe, height=height, width=width, scrollregion=(0, 0, 2222, 2222))
+        new_canvas = Canvas(self.mainframe, height=height, width=width, scrollregion=(0, 0, 1000, 2222))
         new_canvas.grid(column=0, row=1, sticky=(N, S, E, W))
 
         # Adding vertical scrollbar
@@ -187,7 +187,7 @@ class View(object):
     def config(event):
         frame = event.widget
         frame_height = frame.winfo_height()
-        frame_width = frame.winfo_height()
+        frame_width = frame.winfo_width()
         children = frame.winfo_children()
         canvas = children[0]
         print('Widget: ', event.widget)
@@ -196,7 +196,7 @@ class View(object):
 
         print('canvas: ', canvas)
         print(f'width: {canvas.winfo_width()}, height: {canvas.winfo_height()}')
-        canvas.config(height=frame_height)
+        canvas.config(height=frame_height, width=frame_width)
 
 
     # Begin main program loop
