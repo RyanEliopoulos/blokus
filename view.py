@@ -38,11 +38,24 @@ class View(object):
     def _initFrame(self, height, width):
         new_frame = ttk.Frame(self.root, height=height, width=width)
         new_frame.grid(column=0, row=0, sticky=(N, S, W, E))
+        new_frame.bind('<Configure>', self.config)
         return new_frame
     # Used at creation
     def _initCanvas(self, height, width):
-        new_canvas = Canvas(self.mainframe, height=height, width=width)
+        new_canvas = Canvas(self.mainframe, height=height, width=width, scrollregion=(0, 0, 2222, 2222))
         new_canvas.grid(column=0, row=1, sticky=(N, S, E, W))
+
+        # Adding vertical scrollbar
+        vbar = Scrollbar(self.root)
+        vbar.grid(column=1, row=0, sticky=(N, S, E, W))
+        vbar.config(command=new_canvas.yview)
+        new_canvas.config(yscrollcommand=vbar.set)
+
+        # Adding horizontal scrollbar
+        hbar = Scrollbar(self.root, orient=HORIZONTAL)
+        hbar.grid(column=0, row=1, sticky=(N, S, E, W))
+        hbar.config(command=new_canvas.xview)
+        new_canvas.config(xscrollcommand=hbar.set)
         return new_canvas
 
     # Binding controller method to mouse movement
@@ -169,6 +182,22 @@ class View(object):
         # Need to resize these for some reason, otherwise
         self.mainframe.configure(height=1000, width=1000)
         self.canvas.configure(height=1000, width=1000)
+
+    @staticmethod
+    def config(event):
+        frame = event.widget
+        frame_height = frame.winfo_height()
+        frame_width = frame.winfo_height()
+        children = frame.winfo_children()
+        canvas = children[0]
+        print('Widget: ', event.widget)
+        print(event)
+        print('Children:', children)
+
+        print('canvas: ', canvas)
+        print(f'width: {canvas.winfo_width()}, height: {canvas.winfo_height()}')
+        canvas.config(height=frame_height)
+
 
     # Begin main program loop
     def beginLoop(self):
