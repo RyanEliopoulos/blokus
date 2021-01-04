@@ -10,14 +10,19 @@ Then select the number of players as prompted.  This only impacts the scoring me
 <b> Play </b> <br>
 The current player is denoted by the turn indicator in the top-center of the screen. <br>
 The "End Game" button scores the game and announces the winner.  <br>
-The "Skip Turn" allows gameplay to continue in the event a player determines they have no valid move to make.
+The "Skip Turn" allows gameplay to continue in the event a player determines they have no valid move to make. <br>
 <br><br>
 
-<b> Rules </b>
-
+<b> Rules </b> <br>
 This implementation adheres to the rules described in docs/blokus_instructions with two exceptions: <br>
 1: Scoring methodology is always "basic". "Advanced" scoring is not currently supported. <br>
 2: In 3-player games green is always considered the shared color for scoring purposes. Their points are discarded.
+<br><br>
+
+<b> Bugs </b> <br>
+A playing piece will not properly snap to the board when the cursor is straddling the boundary between 
+two of the board squares. Attempting to place the piece in such a state is interpreted as putting the piece down
+rather than the piece being played.
 
 
 
