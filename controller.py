@@ -26,15 +26,31 @@ class Controller(object):
     def mouseListener(self, event):
         view = self.boardView
         model = self.boardModel
-        view.updateScreen(model.updateCoords(event.x, event.y))
+
+        # Translating canvas' "window" coords to the "canvas" coords
+        # to compensate for any scrolling that occurs
+        canvas_x = view.canvas.canvasx(event.x)
+        canvas_y = view.canvas.canvasy(event.y)
+        view.updateScreen(model.updateCoords(canvas_x, canvas_y))
 
     def clickListener(self, event):
         view = self.boardView
         model = self.boardModel
 
+        # Ignoring click if the event originates outside the canvas.
+        # The model does not care about other clicks.
+        if event.widget is not view.canvas:
+            return
+
+        # Translating canvas' "window" coordinates to "canvas" coordinates.
+        # This is the difference between absolute screen coordinates and the
+        # scrolled state of the canvas. Needed for accurate clicks in a scrolled state.
+        canvas_x = view.canvas.canvasx(event.x)
+        canvas_y = view.canvas.canvasy(event.y)
         # Updating "current player" indicator, if applicable
         player_before_click = model.current_player
-        updated_coordinates = model.clickEvent(event)
+        # Executing click
+        updated_coordinates = model.clickEvent(canvas_x, canvas_y)
         if player_before_click != model.current_player:
             view.update_turn_indicator(model.current_player)
 

@@ -38,11 +38,12 @@ class View(object):
     def _initFrame(self, height, width):
         new_frame = ttk.Frame(self.root, height=height, width=width)
         new_frame.grid(column=0, row=0, sticky=(N, S, W, E))
-        new_frame.bind('<Configure>', self.config)
+        new_frame.bind('<Configure>', self.resize_adjustment)
+        new_frame.grid_propagate(False)
         return new_frame
     # Used at creation
     def _initCanvas(self, height, width):
-        new_canvas = Canvas(self.mainframe, height=height, width=width, scrollregion=(0, 0, 1000, 2222))
+        new_canvas = Canvas(self.mainframe, height=height, width=width, scrollregion=(0, 0, 1000, 1200))
         new_canvas.grid(column=0, row=1, sticky=(N, S, E, W))
 
         # Adding vertical scrollbar
@@ -183,21 +184,27 @@ class View(object):
         self.mainframe.configure(height=1000, width=1000)
         self.canvas.configure(height=1000, width=1000)
 
-    @staticmethod
-    def config(event):
+    def resize_adjustment(self, event):
+        """
+            This method is bound to the frame widget. As the root window resizes, so too does the frame.
+            This method causes the canvas, held within the frame, to resize accordingly. This is primarily
+            to ensure the scroll bars work as expected if the window shrinks.
+        """
+
+        # Grabbing widget handles
         frame = event.widget
         frame_height = frame.winfo_height()
         frame_width = frame.winfo_width()
         children = frame.winfo_children()
         canvas = children[0]
-        print('Widget: ', event.widget)
-        print(event)
-        print('Children:', children)
+        end_game_button = children[1]
+        skip_turn_button = children[2]
 
-        print('canvas: ', canvas)
-        print(f'width: {canvas.winfo_width()}, height: {canvas.winfo_height()}')
-        canvas.config(height=frame_height, width=frame_width)
-
+        # Calculating padding for the canvas between the frame
+        canvas_padding_x = end_game_button.winfo_width() + skip_turn_button.winfo_width()
+        canvas_padding_y = end_game_button.winfo_height()  # both buttons are the same height
+        canvas.config(height=frame_height-canvas_padding_y
+                      , width=frame_width-canvas_padding_x)
 
     # Begin main program loop
     def beginLoop(self):

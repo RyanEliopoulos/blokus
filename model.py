@@ -1,16 +1,10 @@
 
 """
 
-    1)x-axis mirror and right rotation now work.  Need to add their counterparts
+    1) Update view to take a dictionary of square data rather than the list of list.
 
-    2) Update view to take a dictionary of square data rather than the list of list.
-
-    3) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
-        behind the active piece instead of just listening the active piece.
-
-    4) The view needs to dynamically configure based on screen conditions.
-            This would mean that the view needs to inform the model of the resolution constraints in order to
-            adjust the square sizes????
+    2) Update the highlighting that occurs when overlapping another played square: Make the color reflect what is hidden
+        behind the active piece instead of just highlighting the active piece.
 
     @@BUGS:
         Sometimes a piece can be dropped onto the board (but not played) when it is otherwise an invalid move.
@@ -229,13 +223,13 @@ class Board(object):
         return coords
 
     # Processing mouse click
-    def clickEvent(self, event):
+    def clickEvent(self, canvas_x, canvas_y):
 
         # Potentially picking a piece
         if self.active_shape is None:
             # check if click is within a shape.
             for shape in self.shapes:
-                if shape.clicked(event.x, event.y) and not shape.placed:
+                if shape.clicked(canvas_x, canvas_y) and not shape.placed:
                     # Checking if the clicked shape matches active player
                     if shape.color == self.current_player:
                         self.active_shape = shape
