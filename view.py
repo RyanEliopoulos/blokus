@@ -24,7 +24,7 @@ class View(object):
         self.skipturn_listener = None
 
         # Working variables
-        self.button_var = IntVar(value=2) # radio button value for player count
+        self.button_var = IntVar(value=2)  # radio button value for player count
 
     # Used at creation
     def _initRoot(self, height, width):
@@ -180,9 +180,12 @@ class View(object):
         for item in executioners_list:
             item.destroy()
 
-        # Need to resize these for some reason, otherwise
+        # Need to resize these for some reason, otherwise they are tiny.
+        # Event generation doesn't work without having manually adjusted these widgets first.
         self.mainframe.configure(height=1000, width=1000)
         self.canvas.configure(height=1000, width=1000)
+        # This results in resize_adjustment being called and provides the correct sizing
+        self.root.event_generate('<Configure>', when='tail')
 
     def resize_adjustment(self, event):
         """
@@ -197,14 +200,26 @@ class View(object):
         frame_width = frame.winfo_width()
         children = frame.winfo_children()
         canvas = children[0]
-        end_game_button = children[1]
-        skip_turn_button = children[2]
+        print('frame stats:', frame_height, frame_width)
+        # Preparing to adjust canvas size
+        canvas_padding_x: float
+        canvas_padding_y: float
 
+        if self.turn_indicator is None:   # User has yet to select the # of players.
+            ok_button = canvas.winfo_children()[3]
+            canvas_padding_x = ok_button.winfo_width() * 2  # Anticipating board layout with 2 buttons
+            canvas_padding_y = ok_button.winfo_height()
+        else:   # Game board is instantiated. Final buttons have spawned.
+            end_game_button = children[1]
+            skip_turn_button = children[2]
+            canvas_padding_x = end_game_button.winfo_width() + skip_turn_button.winfo_width()
+            canvas_padding_y = end_game_button.winfo_height()  # both buttons are the same height and in the same row.
+
+        print('padding:', canvas_padding_x, canvas_padding_y)
         # Calculating padding for the canvas between the frame
-        canvas_padding_x = end_game_button.winfo_width() + skip_turn_button.winfo_width()
-        canvas_padding_y = end_game_button.winfo_height()  # both buttons are the same height
         canvas.config(height=frame_height-canvas_padding_y
                       , width=frame_width-canvas_padding_x)
+        print('canvas stats:', canvas.winfo_height(), canvas.winfo_width())
 
     # Begin main program loop
     def beginLoop(self):
