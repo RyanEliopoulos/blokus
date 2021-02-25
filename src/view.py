@@ -1,8 +1,5 @@
 """
                 So obviously the model knows each squareID. It knows tkinters generation algorithms.
-
-
-
 """
 from tkinter import *
 from tkinter import ttk
@@ -39,7 +36,7 @@ class View(object):
         new_frame = ttk.Frame(self.root, height=height, width=width)
         new_frame.grid(column=0, row=0, sticky=(N, S, W, E))
         new_frame.bind('<Configure>', self.resize_adjustment)
-        new_frame.grid_propagate(False)
+        new_frame.grid_propagate(False)  # Prevents widget resizing from affecting widget's children
         return new_frame
     # Used at creation
     def _initCanvas(self, height, width):
