@@ -2,6 +2,7 @@ A python 3 implementation of the classic game Blokus with local multiplayer supp
 is to get this to support online multiplayer so I can play with my friends.
 
 ![image](./screenshots/blokus.png)
+
 <b> Setup </b> <br>
 Execute main.py. This is built with the standard library so setup is nice and easy.<br> 
 Then select the number of players as prompted.  This only impacts the scoring methodology as described in the rules.
