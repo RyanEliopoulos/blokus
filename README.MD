@@ -1,5 +1,5 @@
 A python 3 implementation of the classic game Blokus with local multiplayer support for 2-4 players. The ultimate goal
-is to get this to support online multiplayer so I can play with distant friends.
+is to get this to support online multiplayer so I can play with distant friends, like we used to around the table.
 
 ![image](./screenshots/blokus.png)
 
